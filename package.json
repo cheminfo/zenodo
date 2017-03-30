@@ -1,0 +1,30 @@
+{
+  "name": "zenodo",
+  "version": "1.0.0",
+  "description": "Node.js library to access the Zenodo API",
+  "main": "src/index.js",
+  "directories": {
+    "test": "test"
+  },
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/targos/zenodo.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/targos/zenodo/issues"
+  },
+  "homepage": "https://github.com/targos/zenodo#readme",
+  "dependencies": {
+    "request": "^2.81.0",
+    "request-promise-native": "^1.0.3"
+  },
+  "devDependencies": {
+    "mocha": "^3.2.0"
+  }
+}

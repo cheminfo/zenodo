@@ -11,4 +11,8 @@ describe('basic testing', () => {
         });
         zenodo.authenticate(testAuth);
     });
+
+    it('test', () => {
+        return zenodo.deposit.create().then(console.log);
+    });
 });
