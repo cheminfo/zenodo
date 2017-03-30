@@ -44,12 +44,13 @@ class ZenodoApi {
 
 class ZenodoApiDeposit {
     constructor(request, baseUrl) {
+        this[kBaseUrl] = baseUrl + 'deposit/';
         this[kRequest] = request.defaults({
-            baseUrl: baseUrl + 'deposit/'
+            baseUrl: this[kBaseUrl]
         });
     }
 
-    depositions(options) {
+    list(options) {
         return this[kRequest].get('/depositions', {
             qs: options
         });
@@ -58,7 +59,27 @@ class ZenodoApiDeposit {
     create(metadata = {}) {
         return this[kRequest].post('/depositions', {
             body: {metadata}
+        }).then((entry) => {
+            return new ZenodoApiDeposition(entry, this[kRequest], this[kBaseUrl], entry.id);
         });
+    }
+}
+
+class ZenodoApiDeposition {
+    constructor(entry, request, baseUrl, id) {
+	this.entry = entry;
+	    console.log(baseUrl + 'depositions/' + id + '/');
+        this[kRequest] = request.defaults({
+            baseUrl: baseUrl + 'depositions/' + id + '/'
+        });
+    }
+    upload(filename, data) {
+    return this[kRequest].post('/files', {
+formData: {
+name: 'testtest.txt',
+file: Buffer.from('abc')
+}
+    })
     }
 }
 

@@ -13,6 +13,12 @@ describe('basic testing', () => {
     });
 
     it('test', () => {
-        return zenodo.deposit.create().then(console.log);
+        return zenodo.deposit.create({
+	    upload_type: 'dataset',
+	    title: 'Test',
+	    description: '<a href="https://www.cheminfo.org">CHEMINFO</a>'
+	}).then(entry => {
+	return entry.upload();
+	});
     });
 });
