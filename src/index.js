@@ -3,6 +3,7 @@
 const request = require('request-promise-native');
 
 const defaultOptions = {
+    protocol: 'https',
     host: 'zenodo.org',
     pathPrefix: '/api/'
 };
@@ -15,7 +16,7 @@ const kSublevel = Symbol('sublevel');
 class ZenodoApi {
     constructor(options) {
         options = Object.assign({}, defaultOptions, options);
-        const baseUrl = 'https://' + options.host + options.pathPrefix;
+        const baseUrl = options.protocol + '://' + options.host + options.pathPrefix;
         this[kBaseUrl] = baseUrl;
         this[kBaseRequest] = request.defaults({
             baseUrl,
@@ -37,50 +38,95 @@ class ZenodoApi {
         this[kSublevel] = {};
     }
 
-    get deposit() {
-        return this[kSublevel].deposit || (this[kSublevel].deposit = new ZenodoApiDeposit(this[kRequest], this[kBaseUrl]));
+    get depositions() {
+        return this[kSublevel].depositions || (this[kSublevel].depositions = new ZenodoApiDepositions(this[kRequest], this[kBaseUrl]));
+    }
+
+    get files() {
+        return this[kSublevel].files || (this[kSublevel].files = new ZenodoApiFiles(this[kRequest], this[kBaseUrl]));
     }
 }
 
-class ZenodoApiDeposit {
+class ZenodoApiDepositions {
     constructor(request, baseUrl) {
-        this[kBaseUrl] = baseUrl + 'deposit/';
-        this[kRequest] = request.defaults({
-            baseUrl: this[kBaseUrl]
-        });
+        this[kRequest] = request.defaults({baseUrl: baseUrl + 'deposit/depositions/'});
     }
 
     list(options) {
-        return this[kRequest].get('/depositions', {
+        return this[kRequest].get('/', {
             qs: options
         });
     }
 
-    create(metadata = {}) {
-        return this[kRequest].post('/depositions', {
+    create(options = {}) {
+        const {metadata = {}} = options;
+        return this[kRequest].post('/', {
             body: {metadata}
-        }).then((entry) => {
-            return new ZenodoApiDeposition(entry, this[kRequest], this[kBaseUrl], entry.id);
+        });
+    }
+
+    retrieve(options = {}) {
+        const {id} = options;
+        return this[kRequest].get(`/${id}`);
+    }
+
+    update(options = {}) {
+        const {
+            id,
+            metadata = {}
+        } = options;
+
+        return this[kRequest].put(`/${id}`, {
+            body: {metadata}
+        });
+    }
+
+    delete(options) {
+        const {id} = options;
+        return this[kRequest].delete(`/${id}`);
+    }
+}
+
+class ZenodoApiFiles {
+    constructor(request, baseUrl) {
+        this[kRequest] = request.defaults({baseUrl: baseUrl + 'files/'});
+    }
+
+    upload(options = {}) {
+        const {
+            deposition,
+            filename,
+            contentType = 'application/octet-stream',
+            data
+        } = options;
+        const bucketId = deposition ? getBucketId(deposition) : options.bucketId;
+        return this[kRequest].put(`/${bucketId}/${filename}`, {
+            body: data,
+            json: false,
+            headers: {
+                'Content-Type': contentType,
+                'Accept': 'application/json'
+            }
+        });
+    }
+
+    delete(options = {}) {
+        const {
+            deposition,
+            versionId,
+            filename
+        } = options;
+        const bucketId = deposition ? getBucketId(deposition) : options.bucketId;
+        return this[kRequest].delete(`/${bucketId}/${filename}`, {
+            qs: {
+                versionId
+            }
         });
     }
 }
 
-class ZenodoApiDeposition {
-    constructor(entry, request, baseUrl, id) {
-	this.entry = entry;
-	    console.log(baseUrl + 'depositions/' + id + '/');
-        this[kRequest] = request.defaults({
-            baseUrl: baseUrl + 'depositions/' + id + '/'
-        });
-    }
-    upload(filename, data) {
-    return this[kRequest].post('/files', {
-formData: {
-name: 'testtest.txt',
-file: Buffer.from('abc')
-}
-    })
-    }
+function getBucketId(deposition) {
+    return deposition.links.bucket.replace(/.*\//, '');
 }
 
 module.exports = ZenodoApi;

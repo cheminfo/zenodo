@@ -1,0 +1,32 @@
+{
+  "created": "2017-03-31T13:03:16.056771+00:00",
+  "files": [],
+  "id": 71287,
+  "links": {
+    "bucket": "https://sandbox.zenodo.org/api/files/f061b251-3bae-4067-8c65-bbb1b5b50e07",
+    "discard": "https://sandbox.zenodo.org/api/deposit/depositions/71287/actions/discard",
+    "edit": "https://sandbox.zenodo.org/api/deposit/depositions/71287/actions/edit",
+    "files": "https://sandbox.zenodo.org/api/deposit/depositions/71287/files",
+    "html": "https://sandbox.zenodo.org/deposit/71287",
+    "publish": "https://sandbox.zenodo.org/api/deposit/depositions/71287/actions/publish",
+    "self": "https://sandbox.zenodo.org/api/deposit/depositions/71287"
+  },
+  "metadata": {
+    "access_right": "open",
+    "description": "This is my description",
+    "license": "CC0-1.0",
+    "prereserve_doi": {
+      "doi": "10.5072/zenodo.71287",
+      "recid": 71287
+    },
+    "publication_date": "2017-03-31",
+    "title": "This is my title",
+    "upload_type": "dataset"
+  },
+  "modified": "2017-03-31T13:03:16.056781+00:00",
+  "owner": 132,
+  "record_id": 71287,
+  "state": "unsubmitted",
+  "submitted": false,
+  "title": "This is my title"
+}
