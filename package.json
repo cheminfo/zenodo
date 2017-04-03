@@ -3,9 +3,6 @@
   "version": "0.0.0",
   "description": "Node.js library to access the Zenodo API",
   "main": "src/index.js",
-  "directories": {
-    "test": "test"
-  },
   "scripts": {
     "test": "mocha"
   },
@@ -14,8 +11,8 @@
     "url": "git+https://github.com/targos/zenodo.git"
   },
   "keywords": [],
-  "author": "",
-  "license": "ISC",
+  "author": "Michaël Zasso",
+  "license": "MIT",
   "bugs": {
     "url": "https://github.com/targos/zenodo/issues"
   },
