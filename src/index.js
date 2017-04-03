@@ -85,6 +85,21 @@ class ZenodoApiDepositions {
         const {id} = options;
         return this[kRequest].delete(`/${id}`);
     }
+
+    publish(options = {}) {
+        const {id} = options;
+        return this[kRequest].post(`/${id}/actions/publish`);
+    }
+
+    edit(options = {}) {
+        const {id} = options;
+        return this[kRequest].post(`/${id}/actions/edit`);
+    }
+
+    discard(options = {}) {
+        const {id} = options;
+        return this[kRequest].post(`/${id}/actions/discard`);
+    }
 }
 
 class ZenodoApiFiles {
