@@ -49,18 +49,18 @@ class ZenodoApi {
 
 class ZenodoApiDepositions {
     constructor(request, baseUrl) {
-        this[kRequest] = request.defaults({baseUrl: baseUrl + 'deposit/depositions/'});
+        this[kRequest] = request.defaults({baseUrl: baseUrl + 'deposit/depositions'});
     }
 
     list(options) {
-        return this[kRequest].get('/', {
+        return this[kRequest].get('', {
             qs: options
         });
     }
 
     create(options = {}) {
         const {metadata = {}} = options;
-        return this[kRequest].post('/', {
+        return this[kRequest].post('', {
             body: {metadata}
         });
     }
@@ -104,7 +104,7 @@ class ZenodoApiDepositions {
 
 class ZenodoApiFiles {
     constructor(request, baseUrl) {
-        this[kRequest] = request.defaults({baseUrl: baseUrl + 'files/'});
+        this[kRequest] = request.defaults({baseUrl: baseUrl + 'files'});
     }
 
     upload(options = {}) {
