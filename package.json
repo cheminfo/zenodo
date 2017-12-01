@@ -8,15 +8,15 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/targos/zenodo.git"
+    "url": "git+https://github.com/cheminfo/zenodo.git"
   },
   "keywords": [],
   "author": "Michaël Zasso",
   "license": "MIT",
   "bugs": {
-    "url": "https://github.com/targos/zenodo/issues"
+    "url": "https://github.com/cheminfo/zenodo/issues"
   },
-  "homepage": "https://github.com/targos/zenodo#readme",
+  "homepage": "https://github.com/cheminfo/zenodo#readme",
   "dependencies": {
     "request": "^2.81.0",
     "request-promise-native": "^1.0.3"
