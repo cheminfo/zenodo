@@ -118,7 +118,7 @@ class ZenodoApiDepositions {
     return this[kRequest].get(`/${id}/files`);
   }
 
-  sort(option = {}) {
+  sort(options = {}) {
     const { id, data } = options;
     return this[kRequest].put(`/${id}/files`, data);
   }
