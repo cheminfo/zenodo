@@ -14,6 +14,17 @@ const kBaseHeaders = Symbol('baseHeaders');
 const kRequest = Symbol('request');
 const kSublevel = Symbol('sublevel');
 
+function getAxios(options) {
+  return axios.create(
+    Object.assign(
+      {
+        maxContentLength: 1024 * 1024 * 1024
+      },
+      options
+    )
+  );
+}
+
 class ZenodoApi {
   constructor(options) {
     options = Object.assign({}, defaultOptions, options);
@@ -55,7 +66,7 @@ class ZenodoApi {
 
 class ZenodoApiDepositions {
   constructor(baseUrl, baseHeaders) {
-    this[kRequest] = axios.create({
+    this[kRequest] = getAxios({
       baseURL: baseUrl + 'deposit/depositions',
       headers: baseHeaders
     });
@@ -105,7 +116,7 @@ class ZenodoApiDepositions {
 
 class ZenodoApiFiles {
   constructor(baseUrl, baseHeaders) {
-    this[kRequest] = axios.create({
+    this[kRequest] = getAxios({
       baseURL: baseUrl + 'files',
       headers: baseHeaders
     });
