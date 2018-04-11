@@ -1,3 +1,13 @@
+<a name="0.4.0"></a>
+# [0.4.0](https://github.com/cheminfo/zenodo/compare/v0.3.0...v0.4.0) (2018-04-11)
+
+
+### Features
+
+* add method to get list of files and sort files ([709876b](https://github.com/cheminfo/zenodo/commit/709876b))
+
+
+
 <a name="0.3.0"></a>
 # [0.3.0](https://github.com/cheminfo/zenodo/compare/v0.2.0...v0.3.0) (2018-04-11)
 
