@@ -112,6 +112,16 @@ class ZenodoApiDepositions {
     const { id } = options;
     return this[kRequest].post(`/${id}/actions/discard`);
   }
+
+  files(options = {}) {
+    const { id } = options;
+    return this[kRequest].get(`/${id}/files`);
+  }
+
+  sort(option = {}) {
+    const { id, data } = options;
+    return this[kRequest].put(`/${id}/files`, data);
+  }
 }
 
 class ZenodoApiFiles {
