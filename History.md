@@ -1,3 +1,13 @@
+<a name="1.0.0"></a>
+# [1.0.0](https://github.com/cheminfo/zenodo/compare/v0.4.1...v1.0.0) (2018-04-26)
+
+
+### Features
+
+* add depositions.newversion ([534b816](https://github.com/cheminfo/zenodo/commit/534b816)), closes [#2](https://github.com/cheminfo/zenodo/issues/2)
+
+
+
 <a name="0.4.1"></a>
 ## [0.4.1](https://github.com/cheminfo/zenodo/compare/v0.4.0...v0.4.1) (2018-04-11)
 
