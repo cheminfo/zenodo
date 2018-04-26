@@ -10,6 +10,7 @@
     "type": "git",
     "url": "git+https://github.com/cheminfo/zenodo.git"
   },
+  "files": ["src"],
   "keywords": [],
   "author": "Michaël Zasso",
   "license": "MIT",
