@@ -10,7 +10,9 @@
     "type": "git",
     "url": "git+https://github.com/cheminfo/zenodo.git"
   },
-  "files": ["src"],
+  "files": [
+    "src"
+  ],
   "keywords": [],
   "author": "Michaël Zasso",
   "license": "MIT",
@@ -19,7 +21,7 @@
   },
   "homepage": "https://github.com/cheminfo/zenodo#readme",
   "dependencies": {
-    "axios": "^0.18.0"
+    "axios": "^0.21.1"
   },
   "devDependencies": {}
 }

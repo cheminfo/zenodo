@@ -18,7 +18,8 @@ function getAxios(options) {
   return axios.create(
     Object.assign(
       {
-        maxContentLength: Infinity
+        maxContentLength: Infinity,
+        maxBodyLength: Infinity
       },
       options
     )
