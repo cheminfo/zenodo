@@ -2,9 +2,27 @@
   "name": "zenodo",
   "version": "1.0.2",
   "description": "Node.js library to access the Zenodo API",
-  "main": "src/index.js",
+  "main": "./lib/index.js",
+  "module": "./lib-esm/index.js",
+  "types": "./lib/index.d.ts",
+  "files": [
+    "src",
+    "lib",
+    "lib-esm"
+  ],
   "scripts": {
-    "test": "echo OK"
+    "check-types": "tsc --noEmit",
+    "eslint": "eslint src",
+    "eslint-fix": "npm run eslint -- --fix",
+    "prepack": "npm run tsc",
+    "prettier": "prettier --check src",
+    "prettier-write": "prettier --write src",
+    "test": "npm run test-coverage && npm run eslint && npm run prettier && npm run check-types",
+    "test-coverage": "vitest run --coverage",
+    "test-only": "vitest run",
+    "tsc": "npm run clean && npm run tsc-cjs && npm run tsc-esm",
+    "tsc-cjs": "tsc --project tsconfig.cjs.json",
+    "tsc-esm": "tsc --project tsconfig.esm.json"
   },
   "repository": {
     "type": "git",
@@ -23,5 +41,12 @@
   "dependencies": {
     "axios": "^0.21.1"
   },
-  "devDependencies": {}
+  "devDependencies": {
+    "@vitest/coverage-v8": "^3.0.5",
+    "dotenv": "^16.4.7",
+    "eslint": "^9.20.1",
+    "eslint-config-cheminfo": "^13.0.0",
+    "prettier": "^3.5.1",
+    "vitest": "^3.0.5"
+  }
 }
