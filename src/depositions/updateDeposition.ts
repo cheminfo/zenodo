@@ -1,4 +1,4 @@
-import { DepositionMetadata, Deposition } from './types';
+import type { DepositionMetadata, Deposition } from '../types';
 
 export async function updateDeposition(
   zenodo,
@@ -10,7 +10,7 @@ export async function updateDeposition(
     method: 'PUT',
     headers: {
       'Content-Type': 'application/json',
-      Authorization: 'Bearer ' + zenodo.accessToken,
+      Authorization: `Bearer ${zenodo.accessToken}`,
     },
     body: JSON.stringify({ metadata }),
   });

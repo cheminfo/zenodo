@@ -1,6 +1,6 @@
-import { responseStatuses } from './responseStatuses';
-import { Deposition } from './types';
-import { Zenodo } from './Zenodo';
+import type { Zenodo } from '../Zenodo';
+import { responseStatuses } from '../responseStatuses';
+import type { Deposition } from '../types';
 
 export async function retrieveDeposition(
   zenodo: Zenodo,
@@ -11,7 +11,7 @@ export async function retrieveDeposition(
     method: 'GET',
     headers: {
       'Content-Type': 'application/json',
-      Authorization: 'Bearer ' + zenodo.accessToken,
+      Authorization: `Bearer ${zenodo.accessToken}`,
     },
   });
   if (response.status !== 200) {

@@ -1,6 +1,6 @@
-import { responseStatuses } from './responseStatuses';
-import type { ZenodoFile } from './types';
-import { Zenodo } from './Zenodo';
+import type { Zenodo } from '../Zenodo';
+import { responseStatuses } from '../responseStatuses';
+import type { ZenodoFile } from '../types';
 
 export async function listFiles(
   zenodo: Zenodo,
@@ -11,7 +11,7 @@ export async function listFiles(
     method: 'GET',
     headers: {
       'Content-Type': 'application/json',
-      Authorization: 'Bearer ' + zenodo.accessToken,
+      Authorization: `Bearer ${zenodo.accessToken}`,
     },
   });
   if (response.status !== 200) {

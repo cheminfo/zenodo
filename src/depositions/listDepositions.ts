@@ -1,19 +1,23 @@
-import { responseStatuses } from './responseStatuses';
-import type { Deposition } from './types';
-import { Zenodo } from './Zenodo';
+ 
+import type { Zenodo } from '../Zenodo';
+import { responseStatuses } from '../responseStatuses';
+import type { Deposition } from '../types';
 
 export async function listDepositions(
   zenodo: Zenodo,
   options: ListDepositionsOptions = {},
 ): Promise<Deposition[]> {
-  const url = `https://${zenodo.host}/api/deposit/depositions`;
+  // options are passed as query parameters
+  const queryParameters = new URLSearchParams(
+    options as Record<string, string>,
+  );
+  const url = `https://${zenodo.host}/api/deposit/depositions?${queryParameters}`;
   const response = await fetch(url, {
     method: 'GET',
     headers: {
       'Content-Type': 'application/json',
-      Authorization: 'Bearer ' + zenodo.accessToken,
+      Authorization: `Bearer ${zenodo.accessToken}`,
     },
-    body: JSON.stringify({ options }),
   });
   if (response.status !== 200) {
     throw new Error(

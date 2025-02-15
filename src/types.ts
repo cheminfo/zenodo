@@ -68,7 +68,7 @@ export interface DepositionMetadata {
     | 'other';
   publication_type?: string;
   image_type?: string;
-  publication_date: string;
+  publication_date?: string;
   title: string;
   creators: Creator[];
   description: string;

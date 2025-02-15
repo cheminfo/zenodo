@@ -1,6 +1,6 @@
-import { responseStatuses } from './responseStatuses';
-import type { ZenodoFile } from './types';
-import { Zenodo } from './Zenodo';
+import type { Zenodo } from '../Zenodo';
+import { responseStatuses } from '../responseStatuses';
+import type { ZenodoFile } from '../types';
 
 export async function createFile(
   zenodo: Zenodo,
@@ -9,18 +9,13 @@ export async function createFile(
 ): Promise<ZenodoFile> {
   const url = `https://${zenodo.host}/api/deposit/depositions/${depositionId}/files`;
 
-  // need to send 2 variables: file that contains file.arrayBuffer and name that contains file.filename
-  // we send as multipart/form-data
-
   const formData = new FormData();
-
-  formData.append('file', new Blob([await file.arrayBuffer()]), file.name);
+  formData.append('file', file);
 
   const response = await fetch(url, {
     method: 'POST',
     headers: {
-      'Content-Type': 'multipart/form-data',
-      Authorization: 'Bearer ' + zenodo.accessToken,
+      Authorization: `Bearer ${zenodo.accessToken}`,
     },
     body: formData,
   });

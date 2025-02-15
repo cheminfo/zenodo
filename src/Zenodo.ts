@@ -1,9 +1,14 @@
-import { createDeposition } from './createDeposition';
-import { ListDepositionsOptions, listDepositions } from './listDepositions';
-import { listFiles } from './listFiles';
-import { retrieveDeposition } from './retrieveDeposition';
-import { DepositionMetadata } from './types';
-import { updateDeposition } from './updateDeposition';
+import { createDeposition } from './depositions/createDeposition';
+import { deleteDeposition } from './depositions/deleteDeposition';
+import type { ListDepositionsOptions } from './depositions/listDepositions';
+import { listDepositions } from './depositions/listDepositions';
+import { retrieveDeposition } from './depositions/retrieveDeposition';
+import { updateDeposition } from './depositions/updateDeposition';
+import { createFile } from './files/createFile';
+import { deleteFile } from './files/deleteFile';
+import { listFiles } from './files/listFiles';
+import { retrieveFile } from './files/retrieveFile';
+import type { DepositionMetadata } from './types';
 
 export class Zenodo {
   host: string;
@@ -18,11 +23,11 @@ export class Zenodo {
     this.accessToken = accessToken;
   }
 
-  async listDepositions(options: ListDepositionsOptions) {
+  async listDepositions(options: ListDepositionsOptions = {}) {
     return listDepositions(this, options);
   }
 
-  async createDeposition(metadata: DepositionMetadata | {}) {
+  async createDeposition(metadata: DepositionMetadata | {} = {}) {
     return createDeposition(this, metadata);
   }
 
@@ -34,7 +39,23 @@ export class Zenodo {
     return updateDeposition(this, id, metadata);
   }
 
+  async deleteDeposition(id: number) {
+    return deleteDeposition(this, id);
+  }
+
   async listFiles(depositionId: number) {
     return listFiles(this, depositionId);
+  }
+
+  async createFile(depositionId: number, file: File) {
+    return createFile(this, depositionId, file);
+  }
+
+  async retrieveFile(depositionId: number, fileId: number) {
+    return retrieveFile(this, depositionId, fileId);
+  }
+
+  async deleteFile(depositionId: number, fileId: string) {
+    return deleteFile(this, depositionId, fileId);
   }
 }

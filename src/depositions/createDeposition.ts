@@ -1,4 +1,4 @@
-import { DepositionMetadata, Deposition } from './types';
+import type { DepositionMetadata, Deposition } from '../types';
 
 export async function createDeposition(
   zenodo,
@@ -9,7 +9,7 @@ export async function createDeposition(
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
-      Authorization: 'Bearer ' + zenodo.accessToken,
+      Authorization: `Bearer ${zenodo.accessToken}`,
     },
     body: JSON.stringify({ metadata }),
   });

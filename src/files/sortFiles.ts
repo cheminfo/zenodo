@@ -1,6 +1,6 @@
-import { responseStatuses } from './responseStatuses';
-import type { ZenodoFile } from './types';
-import { Zenodo } from './Zenodo';
+import type { Zenodo } from '../Zenodo';
+import { responseStatuses } from '../responseStatuses';
+import type { ZenodoFile } from '../types';
 
 export async function sortFiles(
   zenodo: Zenodo,
@@ -12,7 +12,7 @@ export async function sortFiles(
     method: 'PUT',
     headers: {
       'Content-Type': 'application/json',
-      Authorization: 'Bearer ' + zenodo.accessToken,
+      Authorization: `Bearer ${zenodo.accessToken}`,
     },
   });
 

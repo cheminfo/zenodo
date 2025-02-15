@@ -1,4 +1,4 @@
-import { Deposition } from './types';
+import type { Deposition } from '../types';
 
 export async function deleteDeposition(
   zenodo,
@@ -9,10 +9,10 @@ export async function deleteDeposition(
     method: 'DELETE',
     headers: {
       'Content-Type': 'application/json',
-      Authorization: 'Bearer ' + zenodo.accessToken,
+      Authorization: `Bearer ${zenodo.accessToken}`,
     },
   });
-  if (response.status !== 201) {
+  if (response.status !== 204) {
     throw new Error(response.statusText);
   }
 }
