@@ -5,6 +5,7 @@ import type { ZenodoFile } from '../types';
 export async function sortFiles(
   zenodo: Zenodo,
   depositionId: number,
+  files: Array<{ id: string }>,
 ): Promise<ZenodoFile[]> {
   const url = `https://${zenodo.host}/api/deposit/depositions/${depositionId}/files`;
 
@@ -14,6 +15,7 @@ export async function sortFiles(
       'Content-Type': 'application/json',
       Authorization: `Bearer ${zenodo.accessToken}`,
     },
+    body: JSON.stringify(files),
   });
 
   if (response.status !== 200) {

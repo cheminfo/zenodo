@@ -40,30 +40,36 @@ test.only('authenticate', async () => {
   };
 
   const created = await zenodo.createDeposition(newDeposition);
-  //console.log({ created });
+  console.log({ created });
 
   // we could attach a file. We need a 'native' web file
-  const blob = new Blob(['Hello, world!'], { type: 'text/plain' });
-  const file = new File([blob], 'example.txt', { type: 'text/plain' });
+  const fileToUpload = new File(['Hello, world!'], 'example.txt', {
+    type: 'text/plain',
+  });
 
-  const newFile = await zenodo.createFile(created.id, file);
+  const newFile = await zenodo.createFile(created.id, fileToUpload);
   expect(newFile.filesize).toBe(13);
   expect(newFile.checksum).toBe('6cd3556deb0da54bca060b4c39479839');
 
-  const blob2 = new Blob(['Hello, world 2!'], { type: 'text/plain' });
-  const file2 = new File([blob2], 'example2.txt', { type: 'text/plain' });
-  const newFile2 = await zenodo.createFile(created.id, file2);
+  const fileToUpload2 = new File(['Hello, world 2!'], 'example2.txt', {
+    type: 'text/plain',
+  });
+  const newFile2 = await zenodo.createFile(created.id, fileToUpload2);
   expect(newFile2.filesize).toBe(15);
   expect(newFile2.checksum).toBe('9500d92e2fa89ecbdc90cd890ca16ed0');
 
   const files = await zenodo.listFiles(created.id);
+  files.sort((a, b) => a.filename.localeCompare(b.filename));
+  // we force the order in Zenodo, in this case alphabetical filename
+  await zenodo.sortFiles(created.id, files);
   expect(files).toHaveLength(2);
 
   await zenodo.deleteFile(created.id, files[1].id);
-  const files2 = await zenodo.listFiles(created.id);
-  expect(files2).toHaveLength(1);
+  const filesAfterDelete = await zenodo.listFiles(created.id);
+  expect(filesAfterDelete).toHaveLength(1);
 
   const file3 = await zenodo.retrieveFile(created.id, files[0].id);
+  console.log(file3);
   expect(file3.filename).toBe('example.txt');
   const content = await fetch(file3.links.download).then((res) => res.text());
   expect(content).toBe('Hello, world!');

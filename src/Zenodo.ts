@@ -8,6 +8,7 @@ import { createFile } from './files/createFile';
 import { deleteFile } from './files/deleteFile';
 import { listFiles } from './files/listFiles';
 import { retrieveFile } from './files/retrieveFile';
+import { sortFiles } from './files/sortFiles';
 import type { DepositionMetadata } from './types';
 
 export class Zenodo {
@@ -45,6 +46,10 @@ export class Zenodo {
 
   async listFiles(depositionId: number) {
     return listFiles(this, depositionId);
+  }
+
+  async sortFiles(depositionId: number, files: Array<{ id: string }>) {
+    return sortFiles(this, depositionId, files);
   }
 
   async createFile(depositionId: number, file: File) {
