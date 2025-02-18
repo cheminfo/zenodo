@@ -48,10 +48,6 @@ export class Zenodo {
     return listFiles(this, depositionId);
   }
 
-  async sortFiles(depositionId: number, files: Array<{ id: string }>) {
-    return sortFiles(this, depositionId, files);
-  }
-
   async createFile(depositionId: number, file: File) {
     return createFile(this, depositionId, file);
   }

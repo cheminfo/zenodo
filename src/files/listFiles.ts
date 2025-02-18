@@ -14,6 +14,11 @@ export async function listFiles(
       Authorization: `Bearer ${zenodo.accessToken}`,
     },
   });
+
+  //console.log(
+  //   `curl -i https://${zenodo.host}/api/deposit/depositions/${depositionId}/files -X GET -H "Content-Type: application/json" -H "Authorization: Bearer ${zenodo.accessToken}"`,
+  //);
+
   if (response.status !== 200) {
     throw new Error(
       responseStatuses[response.status]?.message || response.statusText,

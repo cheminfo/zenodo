@@ -40,7 +40,7 @@ test.only('authenticate', async () => {
   };
 
   const created = await zenodo.createDeposition(newDeposition);
-  console.log({ created });
+  // console.log({ created });
 
   // we could attach a file. We need a 'native' web file
   const fileToUpload = new File(['Hello, world!'], 'example.txt', {
@@ -59,9 +59,9 @@ test.only('authenticate', async () => {
   expect(newFile2.checksum).toBe('9500d92e2fa89ecbdc90cd890ca16ed0');
 
   const files = await zenodo.listFiles(created.id);
+
   files.sort((a, b) => a.filename.localeCompare(b.filename));
-  // we force the order in Zenodo, in this case alphabetical filename
-  await zenodo.sortFiles(created.id, files);
+
   expect(files).toHaveLength(2);
 
   await zenodo.deleteFile(created.id, files[1].id);
@@ -69,12 +69,15 @@ test.only('authenticate', async () => {
   expect(filesAfterDelete).toHaveLength(1);
 
   const file3 = await zenodo.retrieveFile(created.id, files[0].id);
-  console.log(file3);
   expect(file3.filename).toBe('example.txt');
-  const content = await fetch(file3.links.download).then((res) => res.text());
+
+  const content = await fetch(file3.links.download, {
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${zenodo.accessToken}`,
+    },
+  }).then((res) => res.text());
   expect(content).toBe('Hello, world!');
-  console.log(file3);
-  console.log(text);
 
   // we delete everything
   for (const deposition of existing) {
