@@ -1,10 +1,3 @@
-export interface ZenodoFile {
-  id: string;
-  filename: string;
-  filesize: number;
-  checksum: string; // md5
-}
-
 interface Creator {
   name: string;
   affiliation?: string;
@@ -109,20 +102,4 @@ export interface DepositionMetadata {
   locations?: Location[];
   dates?: DateInterval[];
   method?: string;
-}
-
-export interface Deposition {
-  created: string; // ISO8601 timestamp
-  doi?: string; // Present only for published depositions
-  doi_url?: string; // URL to DOI
-  files: ZenodoFile[];
-  id: number;
-  metadata: DepositionMetadata;
-  modified: string; // ISO8601 timestamp
-  owner: number;
-  record_id?: number; // Present only for published depositions
-  record_url?: string; // URL to public version of record
-  state: 'inprogress' | 'done' | 'error';
-  submitted: boolean;
-  title: string;
 }

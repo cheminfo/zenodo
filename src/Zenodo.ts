@@ -1,23 +1,18 @@
-import { createDeposition } from './depositions/createDeposition';
-import { deleteDeposition } from './depositions/deleteDeposition';
-import type { ListDepositionsOptions } from './depositions/listDepositions';
-import { listDepositions } from './depositions/listDepositions';
-import { retrieveDeposition } from './depositions/retrieveDeposition';
+import { Deposition } from './depositions/Deposition';
+import type { ListDepositionsOptions } from './depositions/ListDepositionsOptions';
 import { updateDeposition } from './depositions/updateDeposition';
-import { createFile } from './files/createFile';
-import { deleteFile } from './files/deleteFile';
-import { listFiles } from './files/listFiles';
-import { retrieveFile } from './files/retrieveFile';
-import { sortFiles } from './files/sortFiles';
+import { fetchZenodo } from './fetchZenodo';
 import type { DepositionMetadata } from './types';
 
 export class Zenodo {
   host: string;
   accessToken: string;
+  baseURL: string;
 
   constructor(options) {
     const { accessToken, host = 'sandbox.zenodo.org' } = options;
     this.host = host;
+    this.baseURL = `https://${host}/api/`;
     if (!accessToken) {
       throw new Error('accessToken is required');
     }
@@ -25,38 +20,42 @@ export class Zenodo {
   }
 
   async listDepositions(options: ListDepositionsOptions = {}) {
-    return listDepositions(this, options);
+    const response = await fetchZenodo(this, {
+      route: 'deposit/depositions',
+      searchParams: options,
+    });
+    const depositions = await response.json();
+    return depositions.map((deposition) => new Deposition(this, deposition));
   }
 
-  async createDeposition(metadata: DepositionMetadata | {} = {}) {
-    return createDeposition(this, metadata);
+  async createDeposition(metadata: DepositionMetadata): Promise<Deposition> {
+    const response = await fetchZenodo(this, {
+      route: 'deposit/depositions',
+      expectedStatus: 201,
+      method: 'POST',
+      body: JSON.stringify({ metadata }),
+    });
+    const deposition = new Deposition(this, await response.json());
+    return deposition;
   }
 
   async retrieveDeposition(id: number) {
-    return retrieveDeposition(this, id);
+    const response = await fetchZenodo(this, {
+      route: `deposit/depositions/${id}`,
+    });
+    const depositions = await response.json();
+    return depositions.map((deposition) => new Deposition(this, deposition));
   }
 
   async updateDeposition(id: number, metadata: DepositionMetadata) {
     return updateDeposition(this, id, metadata);
   }
 
-  async deleteDeposition(id: number) {
-    return deleteDeposition(this, id);
-  }
-
-  async listFiles(depositionId: number) {
-    return listFiles(this, depositionId);
-  }
-
-  async createFile(depositionId: number, file: File) {
-    return createFile(this, depositionId, file);
-  }
-
-  async retrieveFile(depositionId: number, fileId: number) {
-    return retrieveFile(this, depositionId, fileId);
-  }
-
-  async deleteFile(depositionId: number, fileId: string) {
-    return deleteFile(this, depositionId, fileId);
+  async deleteDeposition(id: number): Promise<void> {
+    await fetchZenodo(this, {
+      method: 'DELETE',
+      route: `deposit/depositions/${id}`,
+      expectedStatus: 204,
+    });
   }
 }

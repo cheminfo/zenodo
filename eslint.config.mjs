@@ -8,6 +8,7 @@ export default [
     },
     rules: {
       '@typescript-eslint/naming-convention': 'off',
+      camelcase: 'off',
     },
   },
 ];

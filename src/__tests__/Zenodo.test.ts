@@ -2,7 +2,6 @@
 import { test, expect } from 'vitest';
 
 import { Zenodo } from '../Zenodo';
-import type { Deposition } from '../types';
 
 import { getConfig } from './getConfig';
 
@@ -24,9 +23,8 @@ test.only('authenticate', async () => {
   });
 
   const existing = await zenodo.listDepositions();
-  // console.log({ existing });
 
-  const newDeposition: Deposition = {
+  const depositionMetadata: Deposition = {
     title: 'test dataset from npm library zenodo',
     metadata: {
       upload_type: 'dataset',
@@ -39,41 +37,39 @@ test.only('authenticate', async () => {
     },
   };
 
-  const created = await zenodo.createDeposition(newDeposition);
-  // console.log({ created });
-
+  const firstDeposition = await zenodo.createDeposition(depositionMetadata);
   // we could attach a file. We need a 'native' web file
-  const fileToUpload = new File(['Hello, world!'], 'example.txt', {
+  const firstFile = new File(['Hello, world!'], 'example.txt', {
     type: 'text/plain',
   });
 
-  const newFile = await zenodo.createFile(created.id, fileToUpload);
+  // await createFile(zenodo, firstDeposition.id, firstFile);
+
+  const newFile = await firstDeposition.createFile(firstFile);
   expect(newFile.filesize).toBe(13);
   expect(newFile.checksum).toBe('6cd3556deb0da54bca060b4c39479839');
 
-  const fileToUpload2 = new File(['Hello, world 2!'], 'example2.txt', {
+  const secondFile = new File(['Hello, world 2!'], 'example2.txt', {
     type: 'text/plain',
   });
-  const newFile2 = await zenodo.createFile(created.id, fileToUpload2);
+  const newFile2 = await firstDeposition.createFile(secondFile);
   expect(newFile2.filesize).toBe(15);
   expect(newFile2.checksum).toBe('9500d92e2fa89ecbdc90cd890ca16ed0');
 
-  const files = await zenodo.listFiles(created.id);
-
+  const files = await firstDeposition.listFiles();
   files.sort((a, b) => a.filename.localeCompare(b.filename));
 
   expect(files).toHaveLength(2);
 
-  await zenodo.deleteFile(created.id, files[1].id);
-  const filesAfterDelete = await zenodo.listFiles(created.id);
+  await firstDeposition.deleteFile(files[1].id);
+  const filesAfterDelete = await firstDeposition.listFiles();
   expect(filesAfterDelete).toHaveLength(1);
 
-  const file3 = await zenodo.retrieveFile(created.id, files[0].id);
-  expect(file3.filename).toBe('example.txt');
+  const retrievedFile = await firstDeposition.retrieveFile(files[0].id);
+  expect(retrievedFile.filename).toBe('example.txt');
 
-  const content = await fetch(file3.links.download, {
+  const content = await fetch(retrievedFile.links.download, {
     headers: {
-      'Content-Type': 'application/json',
       Authorization: `Bearer ${zenodo.accessToken}`,
     },
   }).then((res) => res.text());
