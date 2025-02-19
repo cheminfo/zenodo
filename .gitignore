@@ -39,3 +39,7 @@ jspm_packages
 testAuth.json
 
 .env
+
+lib
+lib-esm
+dist

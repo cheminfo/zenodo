@@ -17,28 +17,31 @@ https://developers.zenodo.org/#authentication
 ```js
 const zenodo = new Zenodo({ accessToken });
 
-const depositions = zenodo.listDepositions();
+// retrieve the list of all the depositions
+const depositions = await zenodo.listDepositions();
 for (const deposition of depoositions) {
+  console.log(deposition);
 }
 
+// create a new deposition
 const deposition = zenodo.createDeposition({
-  title: 'test dataset from npm library zenodo',
-  metadata: {
-    upload_type: 'dataset',
-    description: 'test',
-    creators: [
-      {
-        name: 'test',
-      },
-    ],
-  },
+  upload_type: 'dataset',
+  description: 'test',
+  access_right: 'open',
+  creators: [
+    {
+      name: 'test',
+    },
+  ],
 });
+const firstDeposition = await zenodo.createDeposition(depositionMetadata);
 
-// we could attach a file. We need a 'native' web file
-const blob = new Blob(['Hello, world!'], { type: 'text/plain' });
-const file = new File([blob], 'example.txt', { type: 'text/plain' });
+const firstFile = new File(['Hello, world!'], 'example.txt', {
+  type: 'text/plain',
+});
+const newFile = await firstDeposition.createFile(firstFile);
 
-const newFile = await zenodo.createFile(created.id, file);
-
-deposition.createFile();
+const secondFile = new File(['Hello, world 2!'], 'example2.txt', {
+  type: 'text/plain',
+});
 ```

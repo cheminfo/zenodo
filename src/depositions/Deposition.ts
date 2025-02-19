@@ -1,7 +1,8 @@
 import type { Zenodo } from '../Zenodo';
+import { ZenodoFile } from '../ZenodoFile';
 import { fetchZenodo } from '../fetchZenodo';
-import { ZenodoFile } from '../files/ZenodoFile';
-import type { DepositionMetadata } from '../types';
+
+import type { DepositionMetadata } from './types';
 
 export class Deposition {
   private zenodo: Zenodo;
@@ -51,15 +52,15 @@ export class Deposition {
       body: formData,
       expectedStatus: 201,
     });
-    return new ZenodoFile(await response.json());
+    return new ZenodoFile(this.zenodo, await response.json());
   }
 
-  async listFiles() {
+  async listFiles(): Promise<ZenodoFile[]> {
     const response = await fetchZenodo(this.zenodo, {
       route: `deposit/depositions/${this.id}/files`,
     });
     const files = await response.json();
-    return files.map((file) => new ZenodoFile(file));
+    return files.map((file) => new ZenodoFile(this.zenodo, file));
   }
 
   async deleteFile(fileId: string): Promise<void> {
@@ -70,10 +71,19 @@ export class Deposition {
     });
   }
 
-  async retrieveFile(fileId: string) {
+  async retrieveFile(fileId: string): Promise<ZenodoFile> {
     const response = await fetchZenodo(this.zenodo, {
       route: `deposit/depositions/${this.id}/files/${fileId}`,
     });
-    return new ZenodoFile(await response.json());
+    return new ZenodoFile(this.zenodo, await response.json());
+  }
+
+  async update(metadata: DepositionMetadata): Promise<Deposition> {
+    const response = await fetchZenodo(this.zenodo, {
+      route: `deposit/depositions/${this.id}`,
+      method: 'PUT',
+      body: JSON.stringify({ metadata }),
+    });
+    return new Deposition(this.zenodo, await response.json());
   }
 }

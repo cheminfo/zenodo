@@ -1,8 +1,7 @@
 import { Deposition } from './depositions/Deposition';
 import type { ListDepositionsOptions } from './depositions/ListDepositionsOptions';
-import { updateDeposition } from './depositions/updateDeposition';
+import type { DepositionMetadata } from './depositions/types';
 import { fetchZenodo } from './fetchZenodo';
-import type { DepositionMetadata } from './types';
 
 export class Zenodo {
   host: string;
@@ -20,9 +19,13 @@ export class Zenodo {
   }
 
   async listDepositions(options: ListDepositionsOptions = {}) {
+    // all the values must be string
+    const optionsWithStrings = Object.fromEntries(
+      Object.entries(options).map(([key, value]) => [key, String(value)]),
+    );
     const response = await fetchZenodo(this, {
       route: 'deposit/depositions',
-      searchParams: options,
+      searchParams: optionsWithStrings,
     });
     const depositions = await response.json();
     return depositions.map((deposition) => new Deposition(this, deposition));
@@ -45,10 +48,6 @@ export class Zenodo {
     });
     const depositions = await response.json();
     return depositions.map((deposition) => new Deposition(this, deposition));
-  }
-
-  async updateDeposition(id: number, metadata: DepositionMetadata) {
-    return updateDeposition(this, id, metadata);
   }
 
   async deleteDeposition(id: number): Promise<void> {

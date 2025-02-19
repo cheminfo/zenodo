@@ -5,6 +5,7 @@
     "moduleResolution": "node",
     "noImplicitAny": false,
     "outDir": "lib",
+    "skipLibCheck": true,
     "sourceMap": true,
     "strict": true,
     "target": "es2021",

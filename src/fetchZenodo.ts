@@ -1,13 +1,12 @@
-import { F } from 'vitest/dist/chunks/config.BRtC-JeT';
-
 import type { Zenodo } from './Zenodo';
+import { responseStatuses } from './responseStatuses';
 
 interface FetchZenodoOptions {
   route?: string;
   method?: string;
   contentType?: string;
   expectedStatus?: number;
-  searchParams?: Record<string, string | number>;
+  searchParams?: Record<string, string>;
   body?: string | FormData;
 }
 
@@ -43,6 +42,7 @@ export async function fetchZenodo(zenodo: Zenodo, options: FetchZenodoOptions) {
     body,
   });
   if (response.status !== expectedStatus) {
+    // eslint-disable-next-line no-console
     console.error({ url, method, contentType, body, response });
     throw new Error(
       responseStatuses[response.status]?.message || response.statusText,

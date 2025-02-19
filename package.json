@@ -9,7 +9,9 @@
     "src"
   ],
   "scripts": {
+    "build": "npm run tsc-esm && cheminfo-build --entry lib-esm/index.js --root Zenodo",
     "check-types": "tsc --noEmit",
+    "clean": "rimraf lib lib-esm",
     "eslint": "eslint src",
     "eslint-fix": "npm run eslint -- --fix",
     "prepack": "npm run tsc",
@@ -33,16 +35,15 @@
     "url": "https://github.com/cheminfo/zenodo/issues"
   },
   "homepage": "https://github.com/cheminfo/zenodo#readme",
-  "dependencies": {
-    "axios": "^0.21.1",
-    "delay": "^6.0.0"
-  },
   "devDependencies": {
+    "@types/node": "^22.13.4",
     "@vitest/coverage-v8": "^3.0.5",
+    "cheminfo-build": "^1.2.1",
     "dotenv": "^16.4.7",
     "eslint": "^9.20.1",
     "eslint-config-cheminfo-typescript": "^17.0.0",
     "prettier": "^3.5.1",
+    "rimraf": "^6.0.1",
     "vitest": "^3.0.5"
   }
 }
