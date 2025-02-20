@@ -2,7 +2,7 @@
 
 Node.js library to access the Zenodo API
 
-## Documentation
+## Zenodo API Documentation
 
 https://developers.zenodo.org/
 
@@ -15,7 +15,8 @@ https://developers.zenodo.org/#authentication
 ## Usage
 
 ```js
-const zenodo = new Zenodo({ accessToken });
+// by default we set the host to 'sandbox.zenodo.org' so that you can easily play around with this library without damage
+const zenodo = new Zenodo({ accessToken, host: 'zenodo.org' });
 
 // retrieve the list of all the depositions
 const depositions = await zenodo.listDepositions();
@@ -45,3 +46,5 @@ const secondFile = new File(['Hello, world 2!'], 'example2.txt', {
   type: 'text/plain',
 });
 ```
+
+## Development

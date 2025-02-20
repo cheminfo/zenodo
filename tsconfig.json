@@ -1,14 +1,15 @@
 {
   "compilerOptions": {
-    "checkJs": true,
+    "checkJs": false,
     "esModuleInterop": true,
     "moduleResolution": "node",
-    "noImplicitAny": false,
+    "noImplicitAny": true,
     "outDir": "lib",
     "skipLibCheck": true,
     "sourceMap": true,
     "strict": true,
-    "target": "es2021",
+    "target": "es2022",
+    "lib": ["es2022"],
     "useUnknownInCatchVariables": false
   },
   "include": ["./src/**/*"]

@@ -6,20 +6,20 @@
   "module": "./lib-esm/index.js",
   "types": "./lib/index.d.ts",
   "files": [
-    "src"
+    "src",
+    "lib",
+    "lib-esm"
   ],
   "scripts": {
     "build": "npm run tsc-esm && cheminfo-build --entry lib-esm/index.js --root Zenodo",
+    "build-watch": "fswatch -o src | xargs -n1 -I{} npm run build",
     "check-types": "tsc --noEmit",
     "clean": "rimraf lib lib-esm",
     "eslint": "eslint src",
     "eslint-fix": "npm run eslint -- --fix",
     "prepack": "npm run tsc",
-    "prettier": "prettier --check src",
-    "prettier-write": "prettier --write src",
-    "test": "npm run test-coverage && npm run eslint && npm run prettier && npm run check-types",
-    "test-coverage": "vitest run --coverage",
-    "test-only": "vitest run",
+    "test": "npm run test-only && npm run eslint && npm run prettier && npm run check-types",
+    "test-only": "vitest run --coverage",
     "tsc": "npm run clean && npm run tsc-cjs && npm run tsc-esm",
     "tsc-cjs": "tsc --project tsconfig.cjs.json",
     "tsc-esm": "tsc --project tsconfig.esm.json"
@@ -45,5 +45,8 @@
     "prettier": "^3.5.1",
     "rimraf": "^6.0.1",
     "vitest": "^3.0.5"
+  },
+  "dependencies": {
+    "zod": "^3.24.2"
   }
 }

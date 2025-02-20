@@ -1,6 +1,10 @@
 import type { Zenodo } from './Zenodo';
 import { responseStatuses } from './responseStatuses';
 
+interface Headers {
+  Authorization: string;
+  'Content-Type'?: string;
+}
 interface FetchZenodoOptions {
   route?: string;
   method?: string;
@@ -29,7 +33,7 @@ export async function fetchZenodo(zenodo: Zenodo, options: FetchZenodoOptions) {
     url = zenodo.baseURL + route;
   }
 
-  const headers = {
+  const headers: Headers = {
     Authorization: `Bearer ${zenodo.accessToken}`,
   };
   if (contentType) {
@@ -42,10 +46,9 @@ export async function fetchZenodo(zenodo: Zenodo, options: FetchZenodoOptions) {
     body,
   });
   if (response.status !== expectedStatus) {
-    // eslint-disable-next-line no-console
-    console.error({ url, method, contentType, body, response });
     throw new Error(
       responseStatuses[response.status]?.message || response.statusText,
+      { cause: { url, method, contentType, body, response } },
     );
   }
   return response;

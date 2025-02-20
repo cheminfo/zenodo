@@ -1,4 +1,10 @@
-export const responseStatuses = {
+interface ResponseStatusInfo {
+  code: number;
+  name: string;
+  description: string;
+}
+
+export const responseStatuses: Record<number, ResponseStatusInfo>  = {
   200: {
     code: 200,
     name: 'OK',
