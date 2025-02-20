@@ -2,36 +2,27 @@ import { z } from 'zod';
 
 import type { Zenodo } from './Zenodo';
 
-export class ZenodoFile {
-  private zenodo: Zenodo;
-  id: string;
-  filename: string;
-  filesize: number;
-  checksum: string; // md5
-  links: {
-    download: string;
-    self: string;
-  };
+// Define the Zod schema
+const zenodoFileSchema = z.object({
+  id: z.string(),
+  filename: z.string(),
+  filesize: z.number(),
+  checksum: z.string(),
+  links: z.object({
+    download: z.string().url(),
+    self: z.string().url(),
+  }),
+});
 
-  static schema = z.object({
-    id: z.string(),
-    filename: z.string(),
-    filesize: z.number(),
-    checksum: z.string().regex(/^[a-fA-F0-9]{32}$/, 'Invalid MD5 checksum'),
-    links: z.object({
-      download: z.string().url(),
-      self: z.string().url(),
-    }),
-  });
+type ZenodoFileType = z.infer<typeof zenodoFileSchema>;
+
+export class ZenodoFile implements ZenodoFileType {
+  private zenodo: Zenodo;
 
   constructor(zenodo: Zenodo, file: unknown) {
-    const validatedFile = ZenodoFile.schema.parse(file);
+    const validatedFile = zenodoFileSchema.parse(file);
     this.zenodo = zenodo;
-    this.id = validatedFile.id;
-    this.filename = validatedFile.filename;
-    this.filesize = validatedFile.filesize;
-    this.checksum = validatedFile.checksum;
-    this.links = validatedFile.links;
+    Object.assign(this, validatedFile);
   }
 
   async getContentResponse() {
