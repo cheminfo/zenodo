@@ -18,11 +18,23 @@ type ZenodoFileType = z.infer<typeof zenodoFileSchema>;
 
 export class ZenodoFile implements ZenodoFileType {
   private zenodo: Zenodo;
+  public id: string;
+  public filename: string;
+  public filesize: number;
+  public checksum: string;
+  public links: {
+    download: string;
+    self: string;
+  };
 
   constructor(zenodo: Zenodo, file: unknown) {
     const validatedFile = zenodoFileSchema.parse(file);
     this.zenodo = zenodo;
-    Object.assign(this, validatedFile);
+    this.id = validatedFile.id;
+    this.filename = validatedFile.filename;
+    this.filesize = validatedFile.filesize;
+    this.checksum = validatedFile.checksum;
+    this.links = validatedFile.links;
   }
 
   async getContentResponse() {

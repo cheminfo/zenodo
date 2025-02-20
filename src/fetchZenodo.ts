@@ -28,7 +28,9 @@ export async function fetchZenodo(zenodo: Zenodo, options: FetchZenodoOptions) {
   if (searchParams) {
     const urlSearchParams = new URLSearchParams(searchParams);
     url =
-      zenodo.baseURL + route + (urlSearchParams ? `?${urlSearchParams}` : '');
+      zenodo.baseURL +
+      route +
+      (urlSearchParams ? `?${urlSearchParams.toString()}` : '');
   } else {
     url = zenodo.baseURL + route;
   }

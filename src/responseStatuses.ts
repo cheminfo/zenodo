@@ -4,7 +4,7 @@ interface ResponseStatusInfo {
   description: string;
 }
 
-export const responseStatuses: Record<number, ResponseStatusInfo>  = {
+export const responseStatuses: Record<number, ResponseStatusInfo> = {
   200: {
     code: 200,
     name: 'OK',
