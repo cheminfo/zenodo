@@ -6,7 +6,10 @@ export class ZenodoFile {
   filename: string;
   filesize: number;
   checksum: string; // md5
-  links: Record<string, string>;
+  links: {
+    download: string;
+    self: string;
+  };
 
   constructor(zenodo: Zenodo, file: ZenodoFile) {
     this.zenodo = zenodo;
