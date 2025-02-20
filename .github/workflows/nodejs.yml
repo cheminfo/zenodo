@@ -6,6 +6,9 @@ on:
       - main
   pull_request:
 
+env:
+  ACCESS_TOKEN: ${{ secrets.ACCESS_TOKEN }}
+
 jobs:
   nodejs:
     # Documentation: https://github.com/zakodium/workflows#nodejs-ci
