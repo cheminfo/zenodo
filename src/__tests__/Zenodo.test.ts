@@ -18,7 +18,7 @@ test('no token', async () => {
   }).toThrow('accessToken is required');
 });
 
-test.only('authenticate', async () => {
+test('authenticate', async () => {
   const zenodo = new Zenodo({
     host: 'sandbox.zenodo.org',
     accessToken: config.accessToken || '',
