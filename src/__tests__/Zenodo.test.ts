@@ -10,12 +10,10 @@ import { getConfig } from './getConfig';
 const config = getConfig();
 
 test('no token', async () => {
-  // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-  // @ts-ignore
   expect(() => {
+    // @ts-expect-error we are testing the error
     new Zenodo({
       host: 'sandbox.zenodo.org',
-      accessToken: '',
     });
   }).toThrow('accessToken is required');
 });
