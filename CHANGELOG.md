@@ -6,6 +6,17 @@
 * update axios ([2c121db](https://github.com/cheminfo/zenodo/commit/2c121db6e24bccd94468dad9ed2698463a19b5a4))
 
 <a name="1.0.1"></a>
+## [2.0.0](https://github.com/cheminfo/zenodo/compare/v1.0.2...v2.0.0) (2025-02-21)
+
+
+### ⚠ BREAKING CHANGES
+
+* rebuilt project in TS with API validation with Zod ([#10](https://github.com/cheminfo/zenodo/issues/10))
+
+### Features
+
+* rebuilt project in TS with API validation with Zod ([#10](https://github.com/cheminfo/zenodo/issues/10)) ([0da6971](https://github.com/cheminfo/zenodo/commit/0da69719092ae190c92351dfc227484833c27d20))
+
 ## [1.0.1](https://github.com/cheminfo/zenodo/compare/v1.0.0...v1.0.1) (2018-04-26)
 
 
@@ -68,6 +79,3 @@
 
 <a name="0.1.0"></a>
 # 0.1.0 (2017-04-03)
-
-
-
