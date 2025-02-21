@@ -1,10 +1,6 @@
 import type { Zenodo } from './Zenodo';
 import { responseStatuses } from './responseStatuses';
 
-interface Headers {
-  Authorization: string;
-  'Content-Type'?: string;
-}
 interface FetchZenodoOptions {
   route?: string;
   method?: string;
@@ -35,11 +31,11 @@ export async function fetchZenodo(zenodo: Zenodo, options: FetchZenodoOptions) {
     url = zenodo.baseURL + route;
   }
 
-  const headers: Headers = {
+  const headers = new Headers({
     Authorization: `Bearer ${zenodo.accessToken}`,
-  };
+  });
   if (contentType) {
-    headers['Content-Type'] = contentType;
+    headers.set('Content-Type', contentType);
   }
 
   const response = await fetch(url, {
