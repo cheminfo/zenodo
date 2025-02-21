@@ -10,7 +10,6 @@ import { getConfig } from './getConfig';
 const config = getConfig();
 
 test('no token', async () => {
-  // test error
   // eslint-disable-next-line @typescript-eslint/ban-ts-comment
   // @ts-ignore
   expect(() => {
