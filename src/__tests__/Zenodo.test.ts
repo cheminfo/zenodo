@@ -11,9 +11,12 @@ const config = getConfig();
 
 test('no token', async () => {
   // test error
+  // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+  // @ts-ignore
   expect(() => {
     new Zenodo({
       host: 'sandbox.zenodo.org',
+      accessToken: '',
     });
   }).toThrow('accessToken is required');
 });
@@ -21,7 +24,7 @@ test('no token', async () => {
 test('authenticate', async () => {
   const zenodo = new Zenodo({
     host: 'sandbox.zenodo.org',
-    accessToken: config.accessToken,
+    accessToken: config.accessToken || '',
   });
 
   const existing = await zenodo.listDepositions();
