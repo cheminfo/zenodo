@@ -2,9 +2,26 @@ import type { Zenodo } from './Zenodo';
 import { responseStatuses } from './responseStatuses';
 
 interface FetchZenodoOptions {
+  /**
+   * The route to append to the Zenodo base URL.
+   * @default 'deposit/depositions'
+   */
   route?: string;
+  /**
+   * The HTTP method to use for the request.
+   * @default 'GET'
+   */
   method?: string;
+  /**
+   * The content type of the request body.
+   * @default 'application/json' if body is not a FormData, undefined otherwise
+   */
   contentType?: string;
+  /**
+   * The expected status code of the response. If the response status code does not match this
+   * value, we will retry.
+   * @default 200
+   */
   expectedStatus?: number;
   searchParams?: Record<string, string>;
   body?: string | FormData;
