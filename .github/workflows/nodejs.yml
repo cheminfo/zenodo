@@ -13,6 +13,7 @@ jobs:
     with:
       lint-check-types: true
       # Zenodo API is a little bit touchy, so we only test with old version of Node.js
-      node-version-matrix: '[18]'
+      # More over this packages requires at least Node.js 20
+      node-version-matrix: '[20]'
     secrets:
       env: ACCESS_TOKEN=${{ secrets.ACCESS_TOKEN }}
