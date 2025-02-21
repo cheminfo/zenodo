@@ -1,6 +1,6 @@
 import { Deposition } from './depositions/Deposition';
 import type { ListDepositionsOptions } from './depositions/ListDepositionsOptions';
-import type { DepositionMetadata } from './depositions/types';
+import type { DepositionMetadata } from './depositions/depositionSchema';
 import { fetchZenodo } from './fetchZenodo';
 
 interface ZenodoOptions {
@@ -22,7 +22,9 @@ export class Zenodo {
     this.accessToken = accessToken;
   }
 
-  async listDepositions(options: ListDepositionsOptions = {}) {
+  async listDepositions(
+    options: ListDepositionsOptions = {},
+  ): Promise<Deposition[]> {
     // all the values must be string
     const optionsWithStrings = Object.fromEntries(
       Object.entries(options).map(([key, value]) => [key, String(value)]),
@@ -31,8 +33,10 @@ export class Zenodo {
       route: 'deposit/depositions',
       searchParams: optionsWithStrings,
     });
-    const depositions = await response.json();
-    return depositions.map((deposition) => new Deposition(this, deposition));
+    const depositions = (await response.json()) as unknown[];
+    return depositions.map(
+      (deposition: unknown) => new Deposition(this, deposition),
+    );
   }
 
   async createDeposition(metadata: DepositionMetadata): Promise<Deposition> {
@@ -46,12 +50,12 @@ export class Zenodo {
     return deposition;
   }
 
-  async retrieveDeposition(id: number) {
+  async retrieveDeposition(id: number): Promise<Deposition> {
     const response = await fetchZenodo(this, {
       route: `deposit/depositions/${id}`,
     });
-    const depositions = await response.json();
-    return depositions.map((deposition) => new Deposition(this, deposition));
+    const deposition = await response.json();
+    return new Deposition(this, deposition);
   }
 
   async deleteDeposition(id: number): Promise<void> {

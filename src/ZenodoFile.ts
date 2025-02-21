@@ -3,7 +3,7 @@ import { z } from 'zod';
 import type { Zenodo } from './Zenodo';
 
 // Define the Zod schema
-const zenodoFileSchema = z.object({
+export const zenodoFileSchema = z.object({
   id: z.string(),
   filename: z.string(),
   filesize: z.number(),
@@ -16,29 +16,17 @@ const zenodoFileSchema = z.object({
 
 type ZenodoFileType = z.infer<typeof zenodoFileSchema>;
 
-export class ZenodoFile implements ZenodoFileType {
+export class ZenodoFile {
   private zenodo: Zenodo;
-  public id: string;
-  public filename: string;
-  public filesize: number;
-  public checksum: string;
-  public links: {
-    download: string;
-    self: string;
-  };
+  public value: ZenodoFileType;
 
   constructor(zenodo: Zenodo, file: unknown) {
-    const validatedFile = zenodoFileSchema.parse(file);
+    this.value = zenodoFileSchema.parse(file);
     this.zenodo = zenodo;
-    this.id = validatedFile.id;
-    this.filename = validatedFile.filename;
-    this.filesize = validatedFile.filesize;
-    this.checksum = validatedFile.checksum;
-    this.links = validatedFile.links;
   }
 
   async getContentResponse() {
-    const link = this.links.download;
+    const link = this.value.links.download;
     const response = await fetch(link, {
       headers: {
         Authorization: `Bearer ${this.zenodo.accessToken}`,

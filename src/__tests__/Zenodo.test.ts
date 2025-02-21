@@ -3,7 +3,7 @@
 import { test, expect } from 'vitest';
 
 import { Zenodo } from '../Zenodo';
-import type { DepositionMetadata } from '../depositions/types';
+import type { DepositionMetadata } from '../depositions/depositionSchema';
 
 import { getConfig } from './getConfig';
 
@@ -18,7 +18,7 @@ test('no token', async () => {
   }).toThrow('accessToken is required');
 });
 
-test('authenticate', async () => {
+test.only('authenticate', async () => {
   const zenodo = new Zenodo({
     host: 'sandbox.zenodo.org',
     accessToken: config.accessToken || '',
@@ -43,29 +43,28 @@ test('authenticate', async () => {
   const firstFileData = new File(['Hello, world!'], 'example.txt', {
     type: 'text/plain',
   });
-
   const firstFile = await firstDeposition.createFile(firstFileData);
-  expect(firstFile.filesize).toBe(13);
-  expect(firstFile.checksum).toBe('6cd3556deb0da54bca060b4c39479839');
+  expect(firstFile.value.filesize).toBe(13);
+  expect(firstFile.value.checksum).toBe('6cd3556deb0da54bca060b4c39479839');
 
   const secondFileData = new File(['Hello, world 2!'], 'example2.txt', {
     type: 'text/plain',
   });
   const secondFile = await firstDeposition.createFile(secondFileData);
-  expect(secondFile.filesize).toBe(15);
-  expect(secondFile.checksum).toBe('9500d92e2fa89ecbdc90cd890ca16ed0');
+  expect(secondFile.value.filesize).toBe(15);
+  expect(secondFile.value.checksum).toBe('9500d92e2fa89ecbdc90cd890ca16ed0');
 
   const files = await firstDeposition.listFiles();
-  files.sort((a, b) => a.filename.localeCompare(b.filename));
+  files.sort((a, b) => a.value.filename.localeCompare(b.value.filename));
 
   expect(files).toHaveLength(2);
 
-  await firstDeposition.deleteFile(files[1].id);
+  await firstDeposition.deleteFile(files[1].value.id);
   const filesAfterDelete = await firstDeposition.listFiles();
   expect(filesAfterDelete).toHaveLength(1);
 
-  const retrievedFile = await firstDeposition.retrieveFile(files[0].id);
-  expect(retrievedFile.filename).toBe('example.txt');
+  const retrievedFile = await firstDeposition.retrieveFile(files[0].value.id);
+  expect(retrievedFile.value.filename).toBe('example.txt');
 
   const content = await retrievedFile
     .getContentResponse()
@@ -75,6 +74,6 @@ test('authenticate', async () => {
 
   // we delete everything
   for (const deposition of existing) {
-    await zenodo.deleteDeposition(deposition.id);
+    await zenodo.deleteDeposition(deposition.value.id);
   }
 });
