@@ -41,9 +41,11 @@
     "@types/node": "^22.13.4",
     "@vitest/coverage-v8": "^3.0.5",
     "cheminfo-build": "^1.2.1",
+    "cheminfo-types": "^1.8.1",
     "dotenv": "^16.4.7",
     "eslint": "^9.20.1",
     "eslint-config-cheminfo-typescript": "^17.0.0",
+    "fifo-logger": "^1.0.0",
     "prettier": "^3.5.1",
     "rimraf": "^6.0.1",
     "vitest": "^3.0.5"

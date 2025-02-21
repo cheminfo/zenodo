@@ -44,10 +44,14 @@ export async function fetchZenodo(zenodo: Zenodo, options: FetchZenodoOptions) {
     body,
   });
   if (response.status !== expectedStatus) {
-    throw new Error(
-      responseStatuses[response.status]?.description || response.statusText,
-      { cause: { url, method, contentType, body, response } },
+    const errorMessage =
+      responseStatuses[response.status]?.description || response.statusText;
+    zenodo.logger?.error(
+      `Error fetching ${url} with ${method} and ${contentType}: ${errorMessage}`,
     );
+    throw new Error(errorMessage, {
+      cause: { url, method, contentType, body, response },
+    });
   }
   return response;
 }

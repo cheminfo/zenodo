@@ -1,5 +1,6 @@
 /* eslint-disable no-await-in-loop */
 /* eslint-disable no-new */
+import { FifoLogger } from 'fifo-logger';
 import { test, expect } from 'vitest';
 
 import { Zenodo } from '../Zenodo';
@@ -19,9 +20,11 @@ test('no token', async () => {
 });
 
 test('authenticate', async () => {
+  const logger = new FifoLogger();
   const zenodo = new Zenodo({
     host: 'sandbox.zenodo.org',
     accessToken: config.accessToken || '',
+    logger,
   });
 
   const existing = await zenodo.listDepositions();
@@ -76,4 +79,7 @@ test('authenticate', async () => {
   for (const deposition of existing) {
     await zenodo.deleteDeposition(deposition.value.id);
   }
+
+  const logs = logger.getLogs();
+  expect(logs).toHaveLength(10);
 });
