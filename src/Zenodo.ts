@@ -3,12 +3,16 @@ import type { ListDepositionsOptions } from './depositions/ListDepositionsOption
 import type { DepositionMetadata } from './depositions/types';
 import { fetchZenodo } from './fetchZenodo';
 
+interface ZenodoOptions {
+  accessToken: string;
+  host?: string;
+}
 export class Zenodo {
   host: string;
   accessToken: string;
   baseURL: string;
 
-  constructor(options) {
+  constructor(options: ZenodoOptions) {
     const { accessToken, host = 'sandbox.zenodo.org' } = options;
     this.host = host;
     this.baseURL = `https://${host}/api/`;

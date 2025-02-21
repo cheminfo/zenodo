@@ -49,7 +49,7 @@ export async function fetchZenodo(zenodo: Zenodo, options: FetchZenodoOptions) {
   });
   if (response.status !== expectedStatus) {
     throw new Error(
-      responseStatuses[response.status]?.message || response.statusText,
+      responseStatuses[response.status]?.description || response.statusText,
       { cause: { url, method, contentType, body, response } },
     );
   }

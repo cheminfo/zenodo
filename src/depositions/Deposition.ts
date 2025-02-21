@@ -59,7 +59,7 @@ export class Deposition {
     const response = await fetchZenodo(this.zenodo, {
       route: `deposit/depositions/${this.id}/files`,
     });
-    const files = await response.json();
+    const files = (await response.json()) as any[];
     return files.map((file) => new ZenodoFile(this.zenodo, file));
   }
 
