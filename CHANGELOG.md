@@ -6,6 +6,13 @@
 * update axios ([2c121db](https://github.com/cheminfo/zenodo/commit/2c121db6e24bccd94468dad9ed2698463a19b5a4))
 
 <a name="1.0.1"></a>
+## [2.1.0](https://github.com/cheminfo/zenodo/compare/v2.0.0...v2.1.0) (2025-02-21)
+
+
+### Features
+
+* add logger options ([2e12d54](https://github.com/cheminfo/zenodo/commit/2e12d54868fdd38fb0148e9c1afea01987d90dfc))
+
 ## [2.0.0](https://github.com/cheminfo/zenodo/compare/v1.0.2...v2.0.0) (2025-02-21)
 
 
