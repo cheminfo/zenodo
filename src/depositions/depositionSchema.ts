@@ -70,7 +70,6 @@ const linksSchema = z
     edit: z.string().url(),
     discard: z.string().url(),
     newversion: z.string().url(),
-    registerconceptdoi: z.string().url(),
   })
   .catchall(z.string().url()); // Allows extra keys with URL values
 
