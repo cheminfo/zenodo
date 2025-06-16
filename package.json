@@ -38,19 +38,19 @@
   },
   "homepage": "https://github.com/cheminfo/zenodo#readme",
   "devDependencies": {
-    "@types/node": "^22.13.4",
-    "@vitest/coverage-v8": "^3.0.5",
+    "@types/node": "^24.0.3",
+    "@vitest/coverage-v8": "^3.2.3",
     "cheminfo-build": "^1.2.1",
     "cheminfo-types": "^1.8.1",
-    "dotenv": "^16.4.7",
-    "eslint": "^9.20.1",
-    "eslint-config-cheminfo-typescript": "^17.0.0",
+    "dotenv": "^16.5.0",
+    "eslint": "^9.29.0",
+    "eslint-config-cheminfo-typescript": "^18.0.1",
     "fifo-logger": "^1.0.0",
-    "prettier": "^3.5.1",
+    "prettier": "^3.5.3",
     "rimraf": "^6.0.1",
-    "vitest": "^3.0.5"
+    "vitest": "^3.2.3"
   },
   "dependencies": {
-    "zod": "^3.24.2"
+    "zod": "^3.25.64"
   }
 }
