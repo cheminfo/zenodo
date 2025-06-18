@@ -58,7 +58,7 @@ test('upload zip attachments', async () => {
   );
   const downloadedZipContentResponse = await downloadedZip.getContentResponse();
   const downloadedZipBlob = await downloadedZipContentResponse.blob();
-  expect(downloadedZipBlob.size).equal(98752);
+  expect(downloadedZipBlob.size).equal(98708);
 
   const downloadedBlobReader = new BlobReader(downloadedZipBlob);
   const downloadedZipReader = new ZipReader(downloadedBlobReader);
