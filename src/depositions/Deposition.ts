@@ -1,10 +1,13 @@
 /* eslint-disable no-await-in-loop */
-import type { Zenodo } from '../Zenodo';
-import { ZenodoFile } from '../ZenodoFile';
-import { fetchZenodo } from '../fetchZenodo';
+import type { Zenodo } from '../Zenodo.ts';
+import { ZenodoFile } from '../ZenodoFile.ts';
+import { fetchZenodo } from '../fetchZenodo.ts';
 
-import { zenodoDepositionSchema } from './depositionSchema';
-import type { DepositionMetadata, ZenodoDeposition } from './depositionSchema';
+import { zenodoDepositionSchema } from './depositionSchema.ts';
+import type {
+  DepositionMetadata,
+  ZenodoDeposition,
+} from './depositionSchema.ts';
 
 interface ZenodoFileCreationOptions {
   delays?: number[];

@@ -1,7 +1,7 @@
 import Ajv from 'ajv';
 import addFormats from 'ajv-formats';
 
-import { zenodoSchema } from './schema';
+import { zenodoSchema } from './schema.ts';
 
 const ajv = new Ajv();
 addFormats(ajv);

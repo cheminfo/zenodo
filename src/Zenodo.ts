@@ -1,9 +1,9 @@
 import type { Logger } from 'cheminfo-types';
 
-import { Deposition } from './depositions/Deposition';
-import type { ListDepositionsOptions } from './depositions/ListDepositionsOptions';
-import type { DepositionMetadata } from './depositions/depositionSchema';
-import { fetchZenodo } from './fetchZenodo';
+import { Deposition } from './depositions/Deposition.ts';
+import type { ListDepositionsOptions } from './depositions/ListDepositionsOptions.ts';
+import type { DepositionMetadata } from './depositions/depositionSchema.ts';
+import { fetchZenodo } from './fetchZenodo.ts';
 
 interface ZenodoOptions {
   accessToken: string;
