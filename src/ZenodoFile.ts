@@ -1,6 +1,6 @@
 import { z } from 'zod';
 
-import type { Zenodo } from './Zenodo';
+import type { Zenodo } from './Zenodo.ts';
 
 // Define the Zod schema
 export const zenodoFileSchema = z.object({

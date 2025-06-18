@@ -1,5 +1,5 @@
-import type { Zenodo } from './Zenodo';
-import { responseStatuses } from './responseStatuses';
+import type { Zenodo } from './Zenodo.ts';
+import { responseStatuses } from './responseStatuses.ts';
 
 interface FetchZenodoOptions {
   /**

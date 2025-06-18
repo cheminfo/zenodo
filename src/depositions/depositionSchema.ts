@@ -1,6 +1,6 @@
 import { z } from 'zod';
 
-import { zenodoFileSchema } from '../ZenodoFile';
+import { zenodoFileSchema } from '../ZenodoFile.ts';
 
 const creatorSchema = z.object({
   name: z.string(),

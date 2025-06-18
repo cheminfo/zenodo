@@ -1,3 +1,3 @@
-export * from './Zenodo';
+export * from './Zenodo.ts';
 
-export * from './utilities/validateZenodoMetadata';
+export * from './utilities/validateZenodoMetadata.ts';
