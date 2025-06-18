@@ -23,19 +23,31 @@ async function fetchAndZipAttachments(entryId: string) {
   });
 
   await Promise.all(attachmentPromises);
+  const content = json.$content as {
+    general: {
+      keyword: Array<{ kind: string; value: string }>;
+    };
+  };
   await zipWriter.add(
-    json._id,
-    new Blob([JSON.stringify(json, null, 2)]).stream(),
+    'index.json',
+    new Blob([JSON.stringify(json, null, 2)], {
+      type: 'application/zip',
+    }).stream(),
   );
-
   await zipWriter.close();
+
   const zipFile = await zipFileBlobPromise;
   if (zipFile.size > 50 * 1024 * 1024 * 1024) {
     throw new Error(`Zip file for entry ${entryId} exceeds 50GB limit.`);
   }
 
+  const caption = content.general.keyword.find(
+    (keyword) => keyword.kind === 'caption',
+  );
+  const name = caption ? caption.value : (json.$id as string[]).join('');
+
   const zipFileBlob = await zipFileBlobPromise;
-  const zipFileName = `${json._id}.zip`;
+  const zipFileName = `${name}.zip`;
 
   return { blob: zipFileBlob, name: zipFileName };
 }
