@@ -4,7 +4,7 @@ import { FifoLogger } from 'fifo-logger';
 import { test, expect } from 'vitest';
 
 import { Zenodo } from '../Zenodo';
-import type { DepositionMetadata } from '../depositions/depositionSchema';
+import type { ZenodoMetadata } from '../utilities/ZenodoMetadataSchema.ts';
 
 import { getConfig } from './getConfig';
 
@@ -29,7 +29,7 @@ test('authenticate', async () => {
 
   const existing = await zenodo.listDepositions();
 
-  const depositionMetadata: DepositionMetadata = {
+  const depositionMetadata: ZenodoMetadata = {
     upload_type: 'dataset',
     description: 'test',
     access_right: 'open',
@@ -77,7 +77,9 @@ test('authenticate', async () => {
 
   // we delete everything
   for (const deposition of existing) {
-    await zenodo.deleteDeposition(deposition.value.id);
+    if (deposition.value.id !== undefined) {
+      await zenodo.deleteDeposition(deposition.value.id);
+    }
   }
 
   const logs = logger.getLogs();

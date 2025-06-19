@@ -2,8 +2,9 @@ import type { Logger } from 'cheminfo-types';
 
 import { Deposition } from './depositions/Deposition.ts';
 import type { ListDepositionsOptions } from './depositions/ListDepositionsOptions.ts';
-import type { DepositionMetadata } from './depositions/depositionSchema.ts';
 import { fetchZenodo } from './fetchZenodo.ts';
+import type { ZenodoMetadata } from './utilities/ZenodoMetadataSchema.ts';
+import { validateZenodoDeposition } from './utilities/schemaValidation.ts';
 
 interface ZenodoOptions {
   accessToken: string;
@@ -45,14 +46,16 @@ export class Zenodo {
     );
   }
 
-  async createDeposition(metadata: DepositionMetadata): Promise<Deposition> {
+  async createDeposition(metadata: ZenodoMetadata): Promise<Deposition> {
     const response = await fetchZenodo(this, {
       route: 'deposit/depositions',
       expectedStatus: 201,
       method: 'POST',
       body: JSON.stringify({ metadata }),
     });
-    const deposition = new Deposition(this, await response.json());
+    const json = await response.json();
+    validateZenodoDeposition(json);
+    const deposition = new Deposition(this, json);
     this.logger?.info(`Created deposition ${deposition.value.id}`);
     return deposition;
   }

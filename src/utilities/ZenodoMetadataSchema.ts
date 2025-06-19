@@ -3,13 +3,14 @@
 
 import type { FromSchema } from 'json-schema-to-ts';
 
-export const zenodoSchema = {
+export const zenodoMetadataSchema = {
   $id: 'https://zenodraft.github.io/metadata-schema-zenodo/0.3.0/schema.json',
   $schema: 'http://json-schema.org/draft-07/schema',
   additionalProperties: false,
   allOf: [
     {
       if: {
+        type: 'object',
         properties: {
           access_right: {
             const: 'embargoed',
@@ -19,6 +20,7 @@ export const zenodoSchema = {
       },
       // eslint-disable-next-line unicorn/no-thenable
       then: {
+        type: 'object',
         required: ['embargo_date', 'license'],
       },
     },
@@ -538,6 +540,7 @@ export const zenodoSchema = {
         'ZPL-1.1',
         'ZPL-2.0',
         'ZPL-2.1',
+        'cc-zero',
       ],
       type: 'string',
     },
@@ -648,7 +651,7 @@ export const zenodoSchema = {
         properties: {
           affiliation: {
             minLength: 1,
-            type: 'string',
+            type: ['string', 'null'],
           },
           name: {
             description: 'Family name, given names',
@@ -1024,9 +1027,18 @@ export const zenodoSchema = {
     version: {
       type: 'string',
     },
+    prereserve_doi: {
+      type: 'object',
+      required: ['doi', 'recid'],
+      properties: {
+        doi: { type: 'string' },
+        recid: { type: 'integer' },
+      },
+      additionalProperties: false,
+    },
   },
   required: [],
   type: 'object',
 } as const;
 
-export type ZenodoMetadata = FromSchema<typeof zenodoSchema>;
+export type ZenodoMetadata = FromSchema<typeof zenodoMetadataSchema>;
