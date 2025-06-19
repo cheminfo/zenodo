@@ -1,27 +1,15 @@
-import { z } from 'zod';
-
 import type { Zenodo } from './Zenodo.ts';
-
-// Define the Zod schema
-export const zenodoFileSchema = z.object({
-  id: z.string(),
-  filename: z.string(),
-  filesize: z.number(),
-  checksum: z.string(),
-  links: z.object({
-    download: z.string().url(),
-    self: z.string().url(),
-  }),
-});
-
-type ZenodoFileType = z.infer<typeof zenodoFileSchema>;
+import type { ZenodoFileType } from './utilities/ZenodoFileSchema.ts';
+import { validateZenodoFile } from './utilities/schemaValidation.ts';
 
 export class ZenodoFile {
   private zenodo: Zenodo;
   public value: ZenodoFileType;
 
   constructor(zenodo: Zenodo, file: unknown) {
-    this.value = zenodoFileSchema.parse(file);
+    this.value = validateZenodoFile(file)
+      ? (file as ZenodoFileType)
+      : ({} as ZenodoFileType);
     this.zenodo = zenodo;
   }
 

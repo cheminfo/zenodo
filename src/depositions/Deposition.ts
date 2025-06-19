@@ -1,13 +1,11 @@
 /* eslint-disable no-await-in-loop */
+import delay from 'delay';
+
 import type { Zenodo } from '../Zenodo.ts';
 import { ZenodoFile } from '../ZenodoFile.ts';
 import { fetchZenodo } from '../fetchZenodo.ts';
-
-import { zenodoDepositionSchema } from './depositionSchema.ts';
-import type {
-  DepositionMetadata,
-  ZenodoDeposition,
-} from './depositionSchema.ts';
+import type { ZenodoDeposition } from '../utilities/ZenodoDepositionSchema.ts';
+import type { ZenodoMetadata } from '../utilities/ZenodoMetadataSchema.ts';
 
 interface ZenodoFileCreationOptions {
   delays?: number[];
@@ -27,7 +25,7 @@ export class Deposition {
 
   constructor(zenodo: Zenodo, deposition: unknown) {
     this.zenodo = zenodo;
-    this.value = zenodoDepositionSchema.parse(deposition);
+    this.value = deposition as ZenodoDeposition;
   }
 
   async createFile(file: File): Promise<ZenodoFile> {
@@ -56,10 +54,8 @@ export class Deposition {
     let results: Array<PromiseSettledResult<ZenodoFile>> = [];
     const statuses: StatusObject[] = [];
 
-    for (const delay of delays) {
-      await new Promise((res) => {
-        setTimeout(res, delay);
-      });
+    for (const wait of delays) {
+      await delay(wait);
 
       const promises = remaining.map(({ blob, name }) =>
         this.createFile(
@@ -98,7 +94,6 @@ export class Deposition {
         `Successfully uploaded all files for deposition ${this.value.id}`,
       );
     }
-
     statuses.push(
       ...results.map((result, index): StatusObject => {
         if (result.status === 'fulfilled') {
@@ -119,7 +114,6 @@ export class Deposition {
         }
       }),
     );
-
     return statuses;
   }
 
@@ -161,7 +155,7 @@ export class Deposition {
    * @param metadata
    * @returns
    */
-  async update(metadata: DepositionMetadata): Promise<Deposition> {
+  async update(metadata: ZenodoMetadata): Promise<Deposition> {
     const response = await fetchZenodo(this.zenodo, {
       route: `deposit/depositions/${this.value.id}`,
       method: 'PUT',
@@ -169,6 +163,41 @@ export class Deposition {
     });
     const deposition = new Deposition(this.zenodo, await response.json());
     this.zenodo.logger?.info(`Updated deposition ${this.value.id}`);
+    return deposition;
+  }
+
+  async publish(): Promise<Deposition> {
+    const response = await fetchZenodo(this.zenodo, {
+      route: `deposit/depositions/${this.value.id}/actions/publish`,
+      method: 'POST',
+      expectedStatus: 202,
+    });
+    const deposition = new Deposition(this.zenodo, await response.json());
+    this.zenodo.logger?.info(`Published deposition ${this.value.id}`);
+    return deposition;
+  }
+
+  async newVersion(): Promise<Deposition> {
+    const response = await fetchZenodo(this.zenodo, {
+      route: `deposit/depositions/${this.value.id}/actions/newversion`,
+      method: 'POST',
+      expectedStatus: 201,
+    });
+    const deposition = new Deposition(this.zenodo, await response.json());
+    if (
+      deposition.value.metadata &&
+      !deposition.value.metadata?.publication_date
+    ) {
+      deposition.value.metadata.publication_date = new Date()
+        .toISOString()
+        .split('T')[0];
+      const depositionUpdated = await deposition.update(
+        deposition.value.metadata,
+      );
+    }
+    this.zenodo.logger?.info(
+      `Created new version for deposition ${this.value.id}`,
+    );
     return deposition;
   }
 }

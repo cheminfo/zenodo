@@ -2,7 +2,7 @@ import { ZipReader, BlobReader } from '@zip.js/zip.js';
 import { test, expect } from 'vitest';
 
 import { Zenodo } from '../../Zenodo';
-import type { DepositionMetadata } from '../../depositions/depositionSchema';
+import type { ZenodoMetadata } from '../../utilities/ZenodoMetadataSchema';
 import { zipAttachments } from '../zipAttachments';
 
 import { getConfig } from './getConfig';
@@ -33,7 +33,7 @@ test('upload zip attachments', async () => {
     accessToken: config.accessToken || '',
   });
 
-  const metadata: DepositionMetadata = {
+  const metadata: ZenodoMetadata = {
     upload_type: 'dataset',
     description: 'test',
     access_right: 'open',
@@ -46,13 +46,15 @@ test('upload zip attachments', async () => {
   };
 
   const deposition = await zenodo.createDeposition(metadata);
+  if (deposition.value.id === undefined) {
+    throw new Error('Deposition ID is undefined');
+  }
+  const depositionId: number = deposition.value.id;
   await deposition.createFiles(zipResults);
   const files = await deposition.listFiles();
   files.sort((a, b) => a.value.filename.localeCompare(b.value.filename));
   expect(files).toHaveLength(2);
-  const downloadedDeposition = await zenodo.retrieveDeposition(
-    deposition.value.id,
-  );
+  const downloadedDeposition = await zenodo.retrieveDeposition(depositionId);
   const downloadedZip = await downloadedDeposition.retrieveFile(
     files[1].value.id,
   );
@@ -67,5 +69,7 @@ test('upload zip attachments', async () => {
   expect(downloadedEntries[0].filename).toBe('spectra/nmr/1h.jdx');
   await downloadedZipReader.close();
 
-  await zenodo.deleteDeposition(deposition.value.id);
+  if (typeof deposition.value.id === 'number') {
+    await zenodo.deleteDeposition(deposition.value.id);
+  }
 });
