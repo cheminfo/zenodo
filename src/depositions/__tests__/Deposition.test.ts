@@ -42,8 +42,11 @@ test('deposition manipulations', async () => {
   await deposition.createFile(secondFileData);
 
   const files = await deposition.listFiles();
-  console.log(files);
   expect(files.length).toBe(2);
 
-  await zenodo.deleteDeposition(deposition.value.id);
+  if (typeof deposition.value.id === 'number') {
+    await zenodo.deleteDeposition(deposition.value.id);
+  } else {
+    throw new Error('Deposition ID is undefined');
+  }
 });

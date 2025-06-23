@@ -191,9 +191,7 @@ export class Deposition {
       deposition.value.metadata.publication_date = new Date()
         .toISOString()
         .split('T')[0];
-      const depositionUpdated = await deposition.update(
-        deposition.value.metadata,
-      );
+      await deposition.update(deposition.value.metadata);
     }
     this.zenodo.logger?.info(
       `Created new version for deposition ${this.value.id}`,
