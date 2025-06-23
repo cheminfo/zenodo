@@ -13,10 +13,9 @@ interface ZenodoFileCreationOptions {
 
 interface StatusObject {
   status: 'fulfilled' | 'rejected';
-  modified?: boolean;
   error?: string;
   value?: ZenodoFile;
-  filename?: string;
+  filename: string;
 }
 
 export class Deposition {
@@ -28,6 +27,12 @@ export class Deposition {
     this.value = deposition as ZenodoDeposition;
   }
 
+  /**
+   * This method creates a new file in the deposition. If the file is already it will first
+   * delete the existing file and then create a new one.
+   * @param file
+   * @returns
+   */
   async createFile(file: File): Promise<ZenodoFile> {
     const formData = new FormData();
     formData.append('file', file);
@@ -128,24 +133,33 @@ export class Deposition {
     return files.map((file) => new ZenodoFile(this.zenodo, file));
   }
 
-  async deleteFile(fileId: string): Promise<void> {
+  /**
+   *
+   * @param id - the ID or the name of the file to delete
+   */
+  async deleteFile(id: string): Promise<void> {
     await fetchZenodo(this.zenodo, {
-      route: `deposit/depositions/${this.value.id}/files/${fileId}`,
+      route: `deposit/depositions/${this.value.id}/files/${id}`,
       method: 'DELETE',
       expectedStatus: 204,
     });
     this.zenodo.logger?.info(
-      `Deleted file ${fileId} for deposition ${this.value.id}`,
+      `Deleted file ${id} for deposition ${this.value.id}`,
     );
   }
 
-  async retrieveFile(fileId: string): Promise<ZenodoFile> {
+  /**
+   *
+   * @param id - the ID or the name of the file to retrieve
+   * @returns
+   */
+  async retrieveFile(id: string): Promise<ZenodoFile> {
     const response = await fetchZenodo(this.zenodo, {
-      route: `deposit/depositions/${this.value.id}/files/${fileId}`,
+      route: `deposit/depositions/${this.value.id}/files/${id}`,
     });
     const deposition = new ZenodoFile(this.zenodo, await response.json());
     this.zenodo.logger?.info(
-      `Retrieved file ${fileId} for deposition ${this.value.id}`,
+      `Retrieved file ${id} for deposition ${this.value.id}`,
     );
     return deposition;
   }

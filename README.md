@@ -45,6 +45,18 @@ const newFile = await firstDeposition.createFile(firstFile);
 const secondFile = new File(['Hello, world 2!'], 'example2.txt', {
   type: 'text/plain',
 });
+const newFile2 = await firstDeposition.createFile(secondFile);
+
+await firstDeposition.deleteFile(newFile.id);
+await firstDeposition.deleteFile(newFile2.id);
+
+// alternatively you can upload both files at once
+await firstDeposition.createFiles([firstFile, secondFile]);
+
+// you can also create a zip contains many files
+await firstDeposition.createFilesAsZip([firstFile, secondFile], {
+  zipName: 'data.zip',
+});
 ```
 
 ## Development
