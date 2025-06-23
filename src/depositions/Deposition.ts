@@ -123,6 +123,10 @@ export class Deposition {
     return statuses;
   }
 
+  /**
+   * List all files in the deposition
+   * @returns ZenodoFile[] - an array of ZenodoFile objects
+   */
   async listFiles(): Promise<ZenodoFile[]> {
     const response = await fetchZenodo(this.zenodo, {
       route: `deposit/depositions/${this.value.id}/files`,
