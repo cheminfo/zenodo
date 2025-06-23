@@ -1,7 +1,7 @@
 import { test, expect } from 'vitest';
 
-import type { ZenodoMetadata } from '../ZenodoMetadataSchema';
-import { validateZenodoMetadata } from '../schemaValidation';
+import type { ZenodoMetadata } from '../ZenodoMetadataSchema.ts';
+import { validateZenodoMetadata } from '../schemaValidation.ts';
 
 test('ZenodoMetadata as ts object (non typed)', () => {
   const validMetadata = {

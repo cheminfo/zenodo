@@ -2,10 +2,10 @@ import delay from 'delay';
 import { FifoLogger } from 'fifo-logger';
 import { test, expect } from 'vitest';
 
-import { Zenodo } from '../../Zenodo';
+import { Zenodo } from '../../Zenodo.ts';
 import type { ZenodoMetadata } from '../../utilities/ZenodoMetadataSchema.ts';
 
-import { getConfig } from './getConfig';
+import { getConfig } from './getConfig.ts';
 
 const config = getConfig();
 

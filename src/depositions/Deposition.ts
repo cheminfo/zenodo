@@ -114,7 +114,7 @@ export class Deposition {
               result.reason instanceof Error
                 ? result.reason.message
                 : String(result.reason),
-            filename: remaining[index].name,
+            filename: remaining[index] ? remaining[index].name : 'unknown',
           };
         }
       }),
