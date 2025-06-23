@@ -3,29 +3,27 @@
   "version": "2.0.0",
   "description": "Node.js library to access the Zenodo API",
   "type": "module",
-  "main": "./lib/index.js",
-  "module": "./lib-esm/index.js",
+  "exports": "./lib/index.js",
   "types": "./lib/index.d.ts",
   "files": [
     "src",
-    "lib",
-    "lib-esm"
+    "lib"
   ],
   "scripts": {
-    "build": "npm run tsc-esm && cheminfo-build --entry lib-esm/index.js --root Zenodo",
+    "build": "npm run tsc && cheminfo-build --entry lib/index.js --root Zenodo",
     "build-watch": "fswatch -o src | xargs -n1 -I{} npm run build",
     "check-types": "tsc --noEmit",
-    "clean": "rimraf lib lib-esm",
+    "clean": "rimraf lib",
     "eslint": "eslint src",
     "eslint-fix": "npm run eslint -- --fix",
     "prepack": "npm run tsc",
     "prettier": "prettier --check src",
     "prettier-write": "prettier --write src",
-    "test": "npm run test-only && npm run eslint && npm run prettier && npm run check-types",
+    "test": "npm run test-only && npm run eslint && npm run prettier && npm run check-types && npm run verify-build",
     "test-only": "vitest run --coverage",
-    "tsc": "npm run clean && npm run tsc-cjs && npm run tsc-esm",
-    "tsc-cjs": "tsc --project tsconfig.cjs.json",
-    "tsc-esm": "tsc --project tsconfig.esm.json"
+    "tsc": "npm run clean && npm run tsc-build",
+    "tsc-build": "tsc --project tsconfig.build.json",
+    "verify-build": "npm run tsc && node lib/index.js"
   },
   "repository": {
     "type": "git",
@@ -41,6 +39,7 @@
   "devDependencies": {
     "@types/node": "^24.0.3",
     "@vitest/coverage-v8": "^3.2.3",
+    "@zakodium/tsconfig": "^1.0.2",
     "@zip.js/zip.js": "^2.7.62",
     "cheminfo-build": "^1.2.1",
     "cheminfo-types": "^1.8.1",
