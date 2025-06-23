@@ -31,8 +31,8 @@ export class Deposition {
   /**
    * This method creates a new file in the deposition. If the file is already it will first
    * delete the existing file and then create a new one.
-   * @param file
-   * @returns
+   * @param file - the file to create in the deposition
+   * @returns ZenodoFile - the created file object
    */
   async createFile(file: File): Promise<ZenodoFile> {
     const formData = new FormData();
@@ -135,7 +135,7 @@ export class Deposition {
   }
 
   /**
-   *
+   * Delete a file from the deposition
    * @param id - the ID or the name of the file to delete
    */
   async deleteFile(id: string): Promise<void> {
@@ -150,25 +150,25 @@ export class Deposition {
   }
 
   /**
-   *
+   * Retrieve a file from the deposition
    * @param id - the ID or the name of the file to retrieve
-   * @returns
+   * @returns ZenodoFile - the file object
    */
   async retrieveFile(id: string): Promise<ZenodoFile> {
     const response = await fetchZenodo(this.zenodo, {
       route: `deposit/depositions/${this.value.id}/files/${id}`,
     });
-    const deposition = new ZenodoFile(this.zenodo, await response.json());
+    const file = new ZenodoFile(this.zenodo, await response.json());
     this.zenodo.logger?.info(
       `Retrieved file ${id} for deposition ${this.value.id}`,
     );
-    return deposition;
+    return file;
   }
 
   /**
    * Update the metadata of the deposition
-   * @param metadata
-   * @returns
+   * @param metadata - the new metadata to update the deposition with
+   * @returns Deposition - the updated deposition object
    */
   async update(metadata: ZenodoMetadata): Promise<Deposition> {
     const response = await fetchZenodo(this.zenodo, {
@@ -181,6 +181,11 @@ export class Deposition {
     return deposition;
   }
 
+  /**
+   * Publish the deposition. This will make it publicly available.
+   * !!! Note that the deposition cannot be deleted after it is published.
+   * @returns Deposition - the updated deposition object after publishing
+   */
   async publish(): Promise<Deposition> {
     const response = await fetchZenodo(this.zenodo, {
       route: `deposit/depositions/${this.value.id}/actions/publish`,
@@ -192,6 +197,12 @@ export class Deposition {
     return deposition;
   }
 
+  /**
+   * Creates a new version of a published deposition.
+   * This is useful for updating the deposition with new files or metadata.
+   * The new version will have a new ID and will not overwrite the existing deposition.
+   * @returns Deposition - a new deposition object that is a new version of the current deposition
+   */
   async newVersion(): Promise<Deposition> {
     const response = await fetchZenodo(this.zenodo, {
       route: `deposit/depositions/${this.value.id}/actions/newversion`,
