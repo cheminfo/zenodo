@@ -3,10 +3,10 @@
 import { FifoLogger } from 'fifo-logger';
 import { test, expect } from 'vitest';
 
-import { Zenodo } from '../Zenodo';
+import { Zenodo } from '../Zenodo.ts';
 import type { ZenodoMetadata } from '../utilities/ZenodoMetadataSchema.ts';
 
-import { getConfig } from './getConfig';
+import { getConfig } from './getConfig.ts';
 
 const config = getConfig();
 
@@ -62,10 +62,12 @@ test('authenticate', async () => {
 
   expect(files).toHaveLength(2);
 
+  // @ts-expect-error files[1] is not typed in zenodo
   await firstDeposition.deleteFile(files[1].value.id);
   const filesAfterDelete = await firstDeposition.listFiles();
   expect(filesAfterDelete).toHaveLength(1);
 
+  // @ts-expect-error files[0] is not typed in zenodo
   const retrievedFile = await firstDeposition.retrieveFile(files[0].value.id);
   expect(retrievedFile.value.filename).toBe('example.txt');
 

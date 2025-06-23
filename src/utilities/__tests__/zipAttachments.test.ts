@@ -1,11 +1,11 @@
 import { ZipReader, BlobReader } from '@zip.js/zip.js';
 import { test, expect } from 'vitest';
 
-import { Zenodo } from '../../Zenodo';
-import type { ZenodoMetadata } from '../../utilities/ZenodoMetadataSchema';
-import { zipAttachments } from '../zipAttachments';
+import { Zenodo } from '../../Zenodo.ts';
+import type { ZenodoMetadata } from '../ZenodoMetadataSchema.ts'; // Update path if necessary
+import { zipAttachments } from '../zipAttachments.ts';
 
-import { getConfig } from './getConfig';
+import { getConfig } from './getConfig.ts';
 
 const config = getConfig();
 
@@ -17,6 +17,7 @@ test('upload zip attachments', async () => {
 
   const zipResults = await zipAttachments(sampleIDs);
 
+  // @ts-expect-error BlobReader is not typed in zip.js
   const zipFileReader = new BlobReader(zipResults[0].blob);
 
   const zipReader = new ZipReader(zipFileReader);
@@ -56,6 +57,7 @@ test('upload zip attachments', async () => {
   expect(files).toHaveLength(2);
   const downloadedDeposition = await zenodo.retrieveDeposition(depositionId);
   const downloadedZip = await downloadedDeposition.retrieveFile(
+    // @ts-expect-error files[1] is not typed in zip.js
     files[1].value.id,
   );
   const downloadedZipContentResponse = await downloadedZip.getContentResponse();
@@ -66,6 +68,7 @@ test('upload zip attachments', async () => {
   const downloadedZipReader = new ZipReader(downloadedBlobReader);
   const downloadedEntries = await downloadedZipReader.getEntries();
   expect(downloadedEntries).toHaveLength(2);
+  // @ts-expect-error downloadedEntries is not typed in zip.js
   expect(downloadedEntries[0].filename).toBe('spectra/nmr/1h.jdx');
   await downloadedZipReader.close();
 

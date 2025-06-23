@@ -5,10 +5,11 @@ import { zenodoDepositionSchema } from './ZenodoDepositionSchema.ts';
 import { zenodoFileSchema } from './ZenodoFileSchema.ts';
 import { zenodoMetadataSchema } from './ZenodoMetadataSchema.ts';
 
-const ajv = new Ajv({
+// eslint-disable-next-line new-cap
+const ajv = new Ajv.default({
   allErrors: true,
 });
-addFormats(ajv);
+addFormats.default(ajv);
 
 const validateMetadata = ajv.compile(zenodoMetadataSchema);
 
