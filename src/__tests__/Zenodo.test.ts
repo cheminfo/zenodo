@@ -87,3 +87,37 @@ test('authenticate', async () => {
   const logs = logger.getLogs();
   expect(logs).toHaveLength(9);
 });
+
+// skipping this test as it makes the deposition undeletable by publishing it
+test.skip('publish deposition', async () => {
+  const logger = new FifoLogger();
+  const zenodo = new Zenodo({
+    host: 'sandbox.zenodo.org',
+    accessToken: config.accessToken || '',
+    logger,
+  });
+
+  const depositionMetadata: ZenodoMetadata = {
+    upload_type: 'dataset',
+    description: 'test',
+    access_right: 'open',
+    title: 'test dataset from npm library zenodo',
+    creators: [
+      {
+        name: 'test',
+      },
+    ],
+  };
+
+  const deposition = await zenodo.createDeposition(depositionMetadata);
+  expect(deposition.value.id).toBeDefined();
+
+  const publishedDeposition = await deposition.publish();
+  expect(publishedDeposition.value.id).toBe(deposition.value.id);
+  expect(publishedDeposition.value.state).toBe('done');
+  expect(publishedDeposition.value.submitted).toBe(true);
+
+  const newVersion = await publishedDeposition.newVersion();
+  expect(newVersion.value.id).not.toBe(deposition.value.id);
+  expect(newVersion.value.state).toBe('draft');
+});
