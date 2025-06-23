@@ -43,7 +43,6 @@
     "@zip.js/zip.js": "^2.7.62",
     "cheminfo-build": "^1.2.1",
     "cheminfo-types": "^1.8.1",
-    "delay": "^6.0.0",
     "dotenv": "^16.5.0",
     "eslint": "^9.29.0",
     "eslint-config-cheminfo-typescript": "^18.0.1",
@@ -55,6 +54,7 @@
   "dependencies": {
     "ajv": "^8.17.1",
     "ajv-formats": "^3.0.1",
+    "delay": "^6.0.0",
     "json-schema-to-ts": "^3.1.1"
   }
 }
