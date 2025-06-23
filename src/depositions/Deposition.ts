@@ -6,6 +6,7 @@ import { ZenodoFile } from '../ZenodoFile.ts';
 import { fetchZenodo } from '../fetchZenodo.ts';
 import type { ZenodoDeposition } from '../utilities/ZenodoDepositionSchema.ts';
 import type { ZenodoMetadata } from '../utilities/ZenodoMetadataSchema.ts';
+import { validateZenodoDeposition } from '../utilities/schemaValidation.ts';
 
 interface ZenodoFileCreationOptions {
   delays?: number[];
@@ -24,7 +25,7 @@ export class Deposition {
 
   constructor(zenodo: Zenodo, deposition: unknown) {
     this.zenodo = zenodo;
-    this.value = deposition as ZenodoDeposition;
+    this.value = validateZenodoDeposition(deposition);
   }
 
   /**
