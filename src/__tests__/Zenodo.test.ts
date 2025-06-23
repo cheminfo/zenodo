@@ -47,15 +47,19 @@ test('authenticate', async () => {
     type: 'text/plain',
   });
   const firstFile = await firstDeposition.createFile(firstFileData);
-  expect(firstFile.value.filesize).toBe(13);
-  expect(firstFile.value.checksum).toBe('6cd3556deb0da54bca060b4c39479839');
+  expect(firstFile.file?.value.filesize).toBe(13);
+  expect(firstFile.file?.value.checksum).toBe(
+    '6cd3556deb0da54bca060b4c39479839',
+  );
 
   const secondFileData = new File(['Hello, world 2!'], 'example2.txt', {
     type: 'text/plain',
   });
   const secondFile = await firstDeposition.createFile(secondFileData);
-  expect(secondFile.value.filesize).toBe(15);
-  expect(secondFile.value.checksum).toBe('9500d92e2fa89ecbdc90cd890ca16ed0');
+  expect(secondFile.file?.value.filesize).toBe(15);
+  expect(secondFile.file?.value.checksum).toBe(
+    '9500d92e2fa89ecbdc90cd890ca16ed0',
+  );
 
   const files = await firstDeposition.listFiles();
   files.sort((a, b) => a.value.filename.localeCompare(b.value.filename));
@@ -85,7 +89,7 @@ test('authenticate', async () => {
   }
 
   const logs = logger.getLogs();
-  expect(logs).toHaveLength(9);
+  expect(logs).toHaveLength(11);
 });
 
 // skipping this test as it makes the deposition undeletable by publishing it
