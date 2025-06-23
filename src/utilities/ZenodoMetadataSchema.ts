@@ -1,8 +1,9 @@
-// The schema was taken from the Unofficial JSON schema for Zenodo upload metadata the 16th of June 2025.
-// https:// github.com/zenodraft/metadata-schema-zenodo
-
 import type { FromSchema } from 'json-schema-to-ts';
 
+/**
+ * The schema was taken from the Unofficial JSON schema for Zenodo upload metadata the 16th of June 2025.
+ * https:// github.com/zenodraft/metadata-schema-zenodo
+ */
 export const zenodoMetadataSchema = {
   $id: 'https://zenodraft.github.io/metadata-schema-zenodo/0.3.0/schema.json',
   $schema: 'http://json-schema.org/draft-07/schema',
