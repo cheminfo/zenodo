@@ -4,7 +4,6 @@ import { Deposition } from './depositions/Deposition.ts';
 import type { ListDepositionsOptions } from './depositions/ListDepositionsOptions.ts';
 import { fetchZenodo } from './fetchZenodo.ts';
 import type { ZenodoMetadata } from './utilities/ZenodoMetadataSchema.ts';
-import { validateZenodoDeposition } from './utilities/schemaValidation.ts';
 
 interface ZenodoOptions {
   accessToken: string;
@@ -53,9 +52,7 @@ export class Zenodo {
       method: 'POST',
       body: JSON.stringify({ metadata }),
     });
-    const json = await response.json();
-    validateZenodoDeposition(json);
-    const deposition = new Deposition(this, json);
+    const deposition = new Deposition(this, await response.json());
     this.logger?.info(`Created deposition ${deposition.value.id}`);
     return deposition;
   }

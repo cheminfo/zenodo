@@ -7,9 +7,7 @@ export class ZenodoFile {
   public value: ZenodoFileType;
 
   constructor(zenodo: Zenodo, file: unknown) {
-    this.value = validateZenodoFile(file)
-      ? (file as ZenodoFileType)
-      : ({} as ZenodoFileType);
+    this.value = validateZenodoFile(file);
     this.zenodo = zenodo;
   }
 
