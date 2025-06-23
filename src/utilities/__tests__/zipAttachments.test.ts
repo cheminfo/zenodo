@@ -72,4 +72,4 @@ test('upload zip attachments', async () => {
   if (typeof deposition.value.id === 'number') {
     await zenodo.deleteDeposition(deposition.value.id);
   }
-}, 10000);
+}, 30000);
