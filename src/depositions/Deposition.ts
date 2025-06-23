@@ -7,15 +7,18 @@ import { fetchZenodo } from '../fetchZenodo.ts';
 import type { ZenodoDeposition } from '../utilities/ZenodoDepositionSchema.ts';
 import type { ZenodoMetadata } from '../utilities/ZenodoMetadataSchema.ts';
 import { validateZenodoDeposition } from '../utilities/schemaValidation.ts';
+import { zipFiles } from '../utilities/zipFiles.ts';
 
 interface ZenodoFileCreationOptions {
   delays?: number[];
+  zip?: boolean;
+  zipName?: string;
 }
 
 interface StatusObject {
   status: 'fulfilled' | 'rejected';
   error?: string;
-  value?: ZenodoFile;
+  file?: ZenodoFile;
   filename: string;
 }
 
@@ -34,24 +37,28 @@ export class Deposition {
    * @param file - the file to create in the deposition
    * @returns ZenodoFile - the created file object
    */
-  async createFile(file: File): Promise<ZenodoFile> {
-    const formData = new FormData();
-    formData.append('file', file);
-    const response = await fetchZenodo(this.zenodo, {
-      route: `deposit/depositions/${this.value.id}/files`,
-      method: 'POST',
-      body: formData,
-      expectedStatus: 201,
-    });
-    const zenodoFile = new ZenodoFile(this.zenodo, await response.json());
-    this.zenodo.logger?.info(
-      `Created file ${zenodoFile.value.id} for deposition ${this.value.id}`,
-    );
-    return zenodoFile;
+  async createFile(file: File): Promise<StatusObject> {
+    const createdFile = await this.createFiles([file]);
+    if (!createdFile[0]) {
+      throw new Error('Failed to create file: No status object returned.');
+    }
+    return createdFile[0];
   }
 
+  /**
+   * Creates multiple files in the deposition. It will attempt to create each file
+   * multiple times with delays in between until all files are successfully created or
+   * the maximum number of attempts is reached.
+   * @param filesAndNames - an array of File objects to be created in the deposition
+   * @param options - options for file creation
+   * @param options.delays - an array of delays in milliseconds to wait between attempts
+   * @returns StatusObject[] - an array of objects representing the status of each file creation attempt
+   *                            Each object contains the status ('fulfilled' or 'rejected'),
+   *                            the error message (if any), the created ZenodoFile (if fulfilled),
+   *                            and the filename.
+   */
   async createFiles(
-    filesAndNames: Array<{ blob: Blob; name: string }>,
+    filesAndNames: File[],
     options: ZenodoFileCreationOptions = {},
   ): Promise<StatusObject[]> {
     const { delays = [0, 1000, 2000, 4000, 8000, 16000] } = options;
@@ -63,13 +70,7 @@ export class Deposition {
     for (const wait of delays) {
       await delay(wait);
 
-      const promises = remaining.map(({ blob, name }) =>
-        this.createFile(
-          new File([blob], name, {
-            type: blob.type || 'application/octet-stream',
-          }),
-        ),
-      );
+      const promises = remaining.map((file) => this.uploadFile(file));
 
       results = await Promise.allSettled(promises);
 
@@ -105,7 +106,7 @@ export class Deposition {
         if (result.status === 'fulfilled') {
           return {
             status: 'fulfilled',
-            value: result.value,
+            file: result.value,
             filename: result.value.value.filename,
           };
         } else {
@@ -121,6 +122,24 @@ export class Deposition {
       }),
     );
     return statuses;
+  }
+
+  /**
+   * Creates a zip file from multiple files and uploads it to the deposition.
+   * @param filesAndNames - an array of File objects to be created in the deposition
+   * @param options - options for file creation
+   * @returns StatusObject[] - an array of objects representing the status of each file creation attempt
+   */
+  async createFilesAsZip(
+    filesAndNames: File[],
+    options: ZenodoFileCreationOptions = {},
+  ): Promise<StatusObject[]> {
+    const {
+      delays = [0, 1000, 2000, 4000, 8000, 16000],
+      zipName = 'data.zip',
+    } = options;
+    const zippedFile = await zipFiles(filesAndNames, zipName);
+    return this.createFiles([zippedFile], { delays });
   }
 
   /**
@@ -227,5 +246,21 @@ export class Deposition {
       `Created new version for deposition ${this.value.id}`,
     );
     return deposition;
+  }
+  async uploadFile(file: File): Promise<ZenodoFile> {
+    const formData = new FormData();
+    formData.append('file', file);
+    const response = await fetchZenodo(this.zenodo, {
+      route: `deposit/depositions/${this.value.id}/files`,
+      method: 'POST',
+      body: formData,
+      expectedStatus: 201,
+    });
+    const zenodoFile = new ZenodoFile(this.zenodo, await response.json());
+    this.zenodo.logger?.info(
+      `Created file ${zenodoFile.value.id} for deposition ${this.value.id}`,
+    );
+    this.value.files?.push(zenodoFile.value);
+    return zenodoFile;
   }
 }
