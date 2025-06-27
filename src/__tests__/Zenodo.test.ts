@@ -39,6 +39,7 @@ test('authenticate', async () => {
         name: 'test',
       },
     ],
+    license: 'cc-by-1.0',
   };
 
   const firstDeposition = await zenodo.createDeposition(depositionMetadata);
@@ -83,7 +84,10 @@ test('authenticate', async () => {
 
   // we delete everything
   for (const deposition of existing) {
-    if (deposition.value.id !== undefined) {
+    if (
+      deposition.value.id !== undefined &&
+      deposition.value.state !== 'done'
+    ) {
       await zenodo.deleteDeposition(deposition.value.id);
     }
   }

@@ -11,7 +11,7 @@ test('ZenodoMetadata as ts object (non typed)', () => {
     creators: [{ name: 'test' }],
     description: 'test',
     access_right: 'open',
-    license: 'CC0-1.0',
+    license: 'cc-by-1.0',
     imprint_publisher: 'Zenodo',
   };
 
@@ -26,7 +26,7 @@ test('ZenodoMetadata as type (typed using json-schema-to-ts)', () => {
     creators: [{ name: 'test' }],
     description: 'test',
     access_right: 'open',
-    license: 'CC0-1.0',
+    license: 'cc-by-1.0',
     imprint_publisher: 'Zenodo',
   };
 
@@ -41,11 +41,32 @@ test('ZenodoMetadata with additional field', () => {
     creators: [{ name: 'test' }],
     description: 'test',
     access_right: 'open',
-    license: 'CC0-1.0',
+    license: 'cc-by-1.0',
     publisher: 'Zenodo', // should be 'imprint_publisher'
   };
 
   expect(() => validateZenodoMetadata(invalidMetadata)).toThrow(
     'must NOT have additional properties',
   );
+});
+
+test('ZenodoMetadata with missing required field', () => {
+  const invalidMetadata = {
+    title: 'Test visualizer',
+    description: '<p><span class="ql-cursor">﻿</span>Test visualizer</p>',
+    creators: [
+      {
+        name: 'Test, visualizer',
+        affiliation: 'Swiss Federal Institute of Technology in Lausanne',
+        orcid: '0000-0000-0000-0000',
+      },
+    ],
+    license: 'cc-pddc',
+    imprint_publisher: 'Test visualizer',
+    access_right: 'open',
+    publication_date: '2025-06-27',
+    upload_type: 'dataset',
+  };
+
+  expect(() => validateZenodoMetadata(invalidMetadata)).not.toThrow();
 });

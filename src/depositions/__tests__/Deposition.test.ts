@@ -22,6 +22,7 @@ test('deposition manipulations', async () => {
     description: 'test',
     access_right: 'open',
     title: 'test dataset from npm library zenodo',
+    license: 'cc-by-1.0',
     creators: [
       {
         name: 'test',
@@ -34,7 +35,7 @@ test('deposition manipulations', async () => {
     type: 'text/plain',
   });
   await deposition.createFile(firstFileData);
-  await delay(1000); // wait for the file to be processed
+  await delay(1000);
 
   const secondFileData = new File(['Goodbye, world!'], 'example2.txt', {
     type: 'text/plain',
@@ -49,4 +50,7 @@ test('deposition manipulations', async () => {
   } else {
     throw new Error('Deposition ID is undefined');
   }
+
+  const logs = logger.getLogs();
+  expect(logs).toHaveLength(7);
 });
