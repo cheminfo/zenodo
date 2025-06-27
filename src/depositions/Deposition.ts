@@ -28,7 +28,7 @@ export class Deposition {
 
   constructor(zenodo: Zenodo, deposition: unknown) {
     this.zenodo = zenodo;
-    this.value = validateZenodoDeposition(deposition);
+    this.value = validateZenodoDeposition(deposition, zenodo.logger);
   }
 
   /**
