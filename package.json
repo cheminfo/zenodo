@@ -39,7 +39,8 @@
     "@zip.js/zip.js": "^2.7.62",
     "ajv": "^8.17.1",
     "ajv-formats": "^3.0.1",
-    "delay": "^6.0.0"
+    "delay": "^6.0.0",
+    "orcid-utils": "^1.2.2"
   },
   "devDependencies": {
     "@types/node": "^24.0.3",

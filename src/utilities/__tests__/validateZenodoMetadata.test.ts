@@ -50,19 +50,19 @@ test('ZenodoMetadata with additional field', () => {
   );
 });
 
-test('ZenodoMetadata with missing required field', () => {
+test('With ORCID', () => {
   const invalidMetadata = {
-    title: 'Test visualizer',
-    description: '<p><span class="ql-cursor">﻿</span>Test visualizer</p>',
+    title: 'Test Visualizer',
+    description: '<p><strong><em><u>Test Visualizer</u></em></strong></p>',
     creators: [
       {
-        name: 'Test, visualizer',
+        name: 'Test, Visualizer',
         affiliation: 'Swiss Federal Institute of Technology in Lausanne',
-        orcid: '0000-0000-0000-0000',
+        orcid: '0009-0002-9377-2271',
       },
     ],
     license: 'cc-pddc',
-    imprint_publisher: 'Test visualizer',
+    imprint_publisher: 'Test Visualizer',
     access_right: 'open',
     publication_date: '2025-06-27',
     upload_type: 'dataset',

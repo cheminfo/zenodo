@@ -71,7 +71,7 @@ export const zenodoDepositionSchema = {
         'Title of deposition (automatically set from metadata). Defaults to empty string.',
     },
     conceptrecid: {
-      type: 'string', // or 'integer' if it's always a number
+      type: 'string',
       description: 'Concept record ID.',
     },
     links: {
