@@ -1,0 +1,29 @@
+cff-version: 1.2.0
+title: 'Zenodo JavaScript Library'
+abstract: 'Zenodo JavaScript Library is a library to interact with the Zenodo API in JavaScript. It provides functions to create, update, and delete records, as well as to upload files and manage metadata.'
+repository-artifact: https://github.com/cheminfo/zenodo
+repository-code: https://github.com/cheminfo/zenodo
+authors:
+  - family-names: 'Patiny'
+    given-names: 'Luc'
+    affiliation: 'EPFL: Lausanne, Vaud, CH'
+    orcid: 'https://orcid.org/0000-0002-4943-2643'
+  - family-names: 'Zasso'
+    given-names: 'Michaël'
+    affiliation: 'Zakodium Sàrl, Switzerland'
+    orcid: 'https://orcid.org/0000-0001-5295-2159'
+  - family-names: 'Risse'
+    given-names: 'Lucas'
+    affiliation: 'EPFL: Lausanne, Vaud, CH'
+    orcid: 'https://orcid.org/0009-0000-2394-6921'
+  - family-names: 'Henzelin'
+    given-names: 'Kenan Rukundo'
+    affiliation: 'EPFL: Lausanne, Vaud, CH'
+    orcid: 'https://orcid.org/0009-0002-9377-2271'
+
+license: MIT
+keywords:
+  - Javascript
+  - Zenodo
+  - API
+doi:
