@@ -185,7 +185,7 @@ export const zenodoMetadataSchema = {
         properties: {
           affiliation: {
             minLength: 1,
-            type: 'string',
+            type: ['string', 'null'],
           },
           name: {
             description: 'Family name, given names',
@@ -221,8 +221,9 @@ export const zenodoMetadataSchema = {
               'Sponsor',
               'Supervisor',
               'WorkPackageLeader',
+              null,
             ],
-            type: 'string',
+            type: ['string', 'null'],
           },
         },
         required: ['name', 'type'],
@@ -461,6 +462,7 @@ export const zenodoMetadataSchema = {
               'physicalobject',
               'poster',
               'presentation',
+              'publication',
               'publication-annotationcollection',
               'publication-article',
               'publication-book',
@@ -502,6 +504,7 @@ export const zenodoMetadataSchema = {
               'purl',
               'url',
               'urn',
+              'other',
             ],
             type: 'string',
           },
@@ -571,7 +574,7 @@ export const zenodoMetadataSchema = {
         properties: {
           affiliation: {
             minLength: 1,
-            type: 'string',
+            type: ['string', 'null'],
           },
           name: {
             description: 'Family name, given names',
