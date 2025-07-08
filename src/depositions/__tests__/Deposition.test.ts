@@ -55,6 +55,35 @@ test('deposition manipulations', async () => {
   expect(logs).toHaveLength(7);
 });
 
+test('add to community', async () => {
+  const logger = new FifoLogger();
+  const zenodo = new Zenodo({
+    host: 'sandbox.zenodo.org',
+    accessToken: config.accessToken || '',
+    logger,
+  });
+  const depositionMetadata: ZenodoMetadata = {
+    upload_type: 'dataset',
+    description: 'test',
+    access_right: 'open',
+    title: 'test dataset from npm library zenodo',
+    creators: [
+      {
+        name: 'test',
+      },
+    ],
+  };
+  const deposition = await zenodo.createDeposition(depositionMetadata);
+  const firstFileData = new File(['Hello, World!'], 'example.txt', {
+    type: 'text/plain',
+  });
+  await deposition.createFile(firstFileData);
+  expect(deposition.value.id).toBeDefined();
+  const communityId = '24dd3aa0-38b4-415d-b038-cf71aa67e187';
+  const updatedDeposition = await deposition.addToCommunity(communityId);
+  expect(updatedDeposition.value.id).toBe(deposition.value.id);
+});
+
 // skipping this test as it makes the deposition undeletable by publishing it
 test.skip('publish deposition', async () => {
   const logger = new FifoLogger();

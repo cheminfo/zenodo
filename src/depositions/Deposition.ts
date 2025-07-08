@@ -286,4 +286,28 @@ export class Deposition {
     );
     return deposition;
   }
+
+  async addToCommunity(communityId: string): Promise<Deposition> {
+    const body = JSON.stringify({
+      receiver: { community: communityId },
+      type: 'community-submission',
+    });
+    const response = await fetchZenodo(this.zenodo, {
+      route: `records/${this.value.id}/draft/review`,
+      method: 'PUT',
+      body,
+      expectedStatus: 200,
+    });
+    const responseJson = (await response.json()) as {
+      topic: { record: string };
+    };
+    const depositionId = responseJson.topic.record || this.value.id;
+    const deposition = await this.zenodo.retrieveDeposition(
+      Number(depositionId),
+    );
+    this.zenodo.logger?.info(
+      `Added deposition ${this.value.id} to community ${communityId}`,
+    );
+    return deposition;
+  }
 }
