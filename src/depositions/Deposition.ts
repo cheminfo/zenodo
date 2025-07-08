@@ -276,7 +276,7 @@ export class Deposition {
    */
   async submitForReview(): Promise<Deposition> {
     const response = await fetchZenodo(this.zenodo, {
-      route: `deposit/depositions/${this.value.id}/actions/submit_for_review`,
+      route: `records/${this.value.id}/actions/submit-review`,
       method: 'POST',
       expectedStatus: 202,
     });
