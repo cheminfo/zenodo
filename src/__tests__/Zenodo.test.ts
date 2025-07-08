@@ -93,5 +93,5 @@ test('authenticate', async () => {
   }
 
   const logs = logger.getLogs();
-  expect(logs).toHaveLength(11);
+  expect(logs).toHaveLength(13);
 });
