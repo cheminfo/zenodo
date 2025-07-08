@@ -247,6 +247,12 @@ export class Deposition {
     );
     return deposition;
   }
+
+  /**
+   * Upload a file to the deposition
+   * @param file - the file to upload to the deposition
+   * @returns ZenodoFile - the created file object
+   */
   async uploadFile(file: File): Promise<ZenodoFile> {
     const formData = new FormData();
     formData.append('file', file);
@@ -262,5 +268,22 @@ export class Deposition {
     );
     this.value.files?.push(zenodoFile.value);
     return zenodoFile;
+  }
+
+  /**
+   * Submits the deposition for review by the community.
+   * @returns Deposition - the updated deposition object after submission
+   */
+  async submitForReview(): Promise<Deposition> {
+    const response = await fetchZenodo(this.zenodo, {
+      route: `deposit/depositions/${this.value.id}/actions/submit_for_review`,
+      method: 'POST',
+      expectedStatus: 202,
+    });
+    const deposition = new Deposition(this.zenodo, await response.json());
+    this.zenodo.logger?.info(
+      `Submitted deposition ${this.value.id} for review`,
+    );
+    return deposition;
   }
 }
