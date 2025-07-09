@@ -173,6 +173,19 @@ export class Deposition {
   }
 
   /**
+   * delete all files from the deposition
+   */
+  async deleteAllFiles(): Promise<void> {
+    const files = await this.listFiles();
+    for (const file of files) {
+      await this.deleteFile(file.value.id);
+    }
+    this.zenodo.logger?.info(
+      `Deleted all files for deposition ${this.value.id}`,
+    );
+  }
+
+  /**
    * Retrieve a file from the deposition
    * @param id - the ID or the name of the file to retrieve
    * @returns ZenodoFile - the file object
