@@ -287,7 +287,48 @@ export class Deposition {
     return deposition;
   }
 
-  async addToCommunity(communityId: string): Promise<Deposition> {
+  /**
+   * Submits the deposition for review via browser.
+   * CORS request won't work from the other endpoint when using a browser.
+   * If a URL is provided, it will use that URL to submit the request.
+   * Otherwise, it will find the request for the current deposition and submit it.
+   * @param url - optional URL to submit the request
+   */
+  async submitForReviewBrowser(url?: string): Promise<void> {
+    if (url) {
+      // If a URL is provided, we assume it's a full API endpoint for submitting the request
+      url = url.replace(/.*requests\//, 'requests/');
+      await fetchZenodo(this.zenodo, {
+        route: url,
+        method: 'POST',
+      });
+    } else {
+      const response = await fetchZenodo(this.zenodo, {
+        route: `requests`,
+      });
+      const requests = (await response.json()) as {
+        hits: {
+          hits: Array<{
+            topic: { record: string };
+            links: { actions: { submit: string } };
+          }>;
+        };
+      };
+      const request = requests.hits.hits.find(
+        (req) => req.topic.record === String(this.value.id),
+      );
+      await fetchZenodo(this.zenodo, {
+        route: request?.links.actions.submit,
+        method: 'POST',
+        expectedStatus: 202,
+      });
+    }
+    this.zenodo.logger?.info(
+      `Submitted deposition ${this.value.id} for review via browser`,
+    );
+  }
+
+  async addToCommunity(communityId: string): Promise<unknown> {
     const body = JSON.stringify({
       receiver: { community: communityId },
       type: 'community-submission',
@@ -298,16 +339,9 @@ export class Deposition {
       body,
       expectedStatus: 200,
     });
-    const responseJson = (await response.json()) as {
-      topic: { record: string };
-    };
-    const depositionId = responseJson.topic.record || this.value.id;
-    const deposition = await this.zenodo.retrieveDeposition(
-      Number(depositionId),
-    );
     this.zenodo.logger?.info(
       `Added deposition ${this.value.id} to community ${communityId}`,
     );
-    return deposition;
+    return await response.json();
   }
 }
