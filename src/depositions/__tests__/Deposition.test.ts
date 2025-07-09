@@ -44,6 +44,9 @@ test('deposition manipulations', async () => {
 
   const files = await deposition.listFiles();
   expect(files.length).toBe(2);
+  await deposition.deleteAllFiles();
+  const emptyFiles = await deposition.listFiles();
+  expect(emptyFiles.length).toBe(0);
 
   if (typeof deposition.value.id === 'number') {
     await zenodo.deleteDeposition(deposition.value.id);
@@ -52,7 +55,7 @@ test('deposition manipulations', async () => {
   }
 
   const logs = logger.getLogs();
-  expect(logs).toHaveLength(7);
+  expect(logs).toHaveLength(12);
 });
 
 test('add to community', async () => {
@@ -80,8 +83,15 @@ test('add to community', async () => {
   await deposition.createFile(firstFileData);
   expect(deposition.value.id).toBeDefined();
   const communityId = '24dd3aa0-38b4-415d-b038-cf71aa67e187';
-  const updatedDeposition = await deposition.addToCommunity(communityId);
-  expect(updatedDeposition.value.id).toBe(deposition.value.id);
+  const request = await deposition.addToCommunity(communityId);
+  expect(request).toBeDefined();
+  expect(request).toHaveProperty('links.actions');
+  // @ts-expect-error request is unknown type
+  expect(request.receiver.community).toBe(communityId);
+  // @ts-expect-error request is unknown type
+  expect(request.topic.record).toBeDefined();
+  // @ts-expect-error request is unknown type
+  expect(request.topic.record).toEqual(String(deposition.value.id));
 });
 
 // skipping this test as it makes the deposition undeletable by publishing it
