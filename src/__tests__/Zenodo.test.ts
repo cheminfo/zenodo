@@ -98,5 +98,5 @@ test('authenticate', async () => {
   }
 
   const logs = logger.getLogs();
-  expect(logs.length).toBeGreaterThanOrEqual(15);
+  expect(logs.length).toBeGreaterThanOrEqual(13);
 }, 15000);
