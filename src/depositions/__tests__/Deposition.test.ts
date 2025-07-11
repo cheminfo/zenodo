@@ -9,7 +9,7 @@ import { getConfig } from './getConfig.ts';
 
 const config = getConfig();
 
-test('deposition manipulations', async () => {
+test('basic deposition manipulations', async () => {
   const logger = new FifoLogger();
   const zenodo = new Zenodo({
     host: 'sandbox.zenodo.org',
@@ -40,10 +40,20 @@ test('deposition manipulations', async () => {
   const secondFileData = new File(['Goodbye, world!'], 'example2.txt', {
     type: 'text/plain',
   });
-  await deposition.createFile(secondFileData);
+  const thirdFileData = new File(['Hello, world 3!'], 'example3.txt', {
+    type: 'text/plain',
+  });
+  await deposition.createFiles([secondFileData, thirdFileData]);
+
+  const fourthFileData = new File(['Hello, world 4!'], 'example4.txt', {
+    type: 'text/plain',
+  });
+  await deposition.createFilesAsZip([fourthFileData], {
+    zipName: 'example4.zip',
+  });
 
   const files = await deposition.listFiles();
-  expect(files.length).toBe(2);
+  expect(files.length).toBe(4);
   await deposition.deleteAllFiles();
   const emptyFiles = await deposition.listFiles();
   expect(emptyFiles.length).toBe(0);
@@ -55,7 +65,7 @@ test('deposition manipulations', async () => {
   }
 
   const logs = logger.getLogs();
-  expect(logs).toHaveLength(12);
+  expect(logs).toHaveLength(17);
 });
 
 test('add to community', async () => {
@@ -95,7 +105,7 @@ test('add to community', async () => {
 });
 
 // skipping this test as it makes the deposition undeletable by publishing it
-test.skip('publish deposition', async () => {
+test.todo('publish deposition', async () => {
   const logger = new FifoLogger();
   const zenodo = new Zenodo({
     host: 'sandbox.zenodo.org',
@@ -126,6 +136,16 @@ test.skip('publish deposition', async () => {
   const newVersion = await publishedDeposition.newVersion();
   expect(newVersion.value.id).not.toBe(deposition.value.id);
   expect(newVersion.value.state).toBe('draft');
+
+  // @ts-expect-error newVersion is unknown type
+  const versions = await zenodo.retrieveVersions(newVersion.value.id);
+  expect(versions.length).toBeGreaterThan(0);
+  const latestVersion = versions.find(
+    // @ts-expect-error version is unknown type
+    (version) => version.metadata.relations.version[0].is_last === true,
+  );
+
+  expect(latestVersion).toBeDefined();
 });
 
 test.skip('submit for review', async () => {

@@ -43,6 +43,11 @@ test('authenticate', async () => {
   };
 
   const firstDeposition = await zenodo.createDeposition(depositionMetadata);
+  const retrievedDeposition = await zenodo.retrieveDeposition(
+    // @ts-expect-error value may be undefined
+    firstDeposition.value.id,
+  );
+  expect(retrievedDeposition.value.id).toBe(firstDeposition.value.id);
   // we could attach a file. We need a 'native' web file
   const firstFileData = new File(['Hello, world!'], 'example.txt', {
     type: 'text/plain',
@@ -93,5 +98,5 @@ test('authenticate', async () => {
   }
 
   const logs = logger.getLogs();
-  expect(logs).toHaveLength(14);
+  expect(logs).toHaveLength(15);
 }, 10000);
