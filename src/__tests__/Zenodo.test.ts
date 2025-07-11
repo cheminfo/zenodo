@@ -66,16 +66,25 @@ test('authenticate', async () => {
   expect(secondFile.file?.value.checksum).toBe(
     '9500d92e2fa89ecbdc90cd890ca16ed0',
   );
+  const thirdFileData = new File(['Hello, world 3!'], 'example3.txt', {
+    type: 'text/plain',
+  });
+  const thirdFile = await firstDeposition.createFilesAsZip([thirdFileData], {
+    zipName: 'example3',
+  });
+
+  expect(thirdFile[0].filename).toBe('example3.zip');
+  expect(thirdFile[0].file?.value.filesize).toBe(269);
 
   const files = await firstDeposition.listFiles();
   files.sort((a, b) => a.value.filename.localeCompare(b.value.filename));
 
-  expect(files).toHaveLength(2);
+  expect(files).toHaveLength(3);
 
   // @ts-expect-error files[1] is not typed in zenodo
   await firstDeposition.deleteFile(files[1].value.id);
   const filesAfterDelete = await firstDeposition.listFiles();
-  expect(filesAfterDelete).toHaveLength(1);
+  expect(filesAfterDelete).toHaveLength(2);
 
   // @ts-expect-error files[0] is not typed in zenodo
   const retrievedFile = await firstDeposition.retrieveFile(files[0].value.id);
