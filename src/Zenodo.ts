@@ -66,6 +66,25 @@ export class Zenodo {
     return new Deposition(this, deposition);
   }
 
+  /**
+   * Retrieve all versions of a deposition
+   * @param id - the deposition id
+   * @returns unvalidated array of deposition versions
+   */
+  async retrieveVersions(id: number): Promise<unknown[]> {
+    const response = await fetchZenodo(this, {
+      route: `records/${id}/versions`,
+    });
+    const versions = (await response.json()) as {
+      hits: { total: number; hits: unknown[] };
+    };
+    this.logger?.info(
+      `Retrieved ${versions?.hits.total} versions for deposition ${id}`,
+    );
+
+    return versions?.hits.hits || [];
+  }
+
   async deleteDeposition(id: number): Promise<void> {
     await fetchZenodo(this, {
       method: 'DELETE',
