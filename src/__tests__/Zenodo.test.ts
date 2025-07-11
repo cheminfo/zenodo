@@ -73,7 +73,9 @@ test('authenticate', async () => {
     zipName: 'example3',
   });
 
+  // @ts-expect-error thirdFile is not typed in zenodo
   expect(thirdFile[0].filename).toBe('example3.zip');
+  // @ts-expect-error thirdFile is not typed in zenodo
   expect(thirdFile[0].file?.value.filesize).toBe(269);
 
   const files = await firstDeposition.listFiles();
