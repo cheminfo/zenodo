@@ -341,6 +341,12 @@ export class Deposition {
     );
   }
 
+  /**
+   * Adds the deposition to a community.
+   * @param communityId - the ID of the community to add the deposition to
+   * This method adds the deposition to a community by creating a review request.
+   * @returns response - the response from the Zenodo API
+   */
   async addToCommunity(communityId: string): Promise<unknown> {
     const body = JSON.stringify({
       receiver: { community: communityId },
