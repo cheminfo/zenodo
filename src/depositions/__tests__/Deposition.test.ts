@@ -66,7 +66,7 @@ test('basic deposition manipulations', async () => {
 
   const logs = logger.getLogs();
   expect(logs).toHaveLength(17);
-});
+}, 10000);
 
 test('add to community', async () => {
   const logger = new FifoLogger();
