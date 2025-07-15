@@ -19,6 +19,19 @@ test('no token', async () => {
   }).toThrow('accessToken is required');
 });
 
+test('create zenodo', async () => {
+  const logger = new FifoLogger();
+  const zenodo = await Zenodo.create({
+    host: 'sandbox.zenodo.org',
+    accessToken: config.accessToken || '',
+    logger,
+  });
+  expect(zenodo).toBeInstanceOf(Zenodo);
+  expect(zenodo.host).toBe('sandbox.zenodo.org');
+  expect(zenodo.baseURL).toBe('https://sandbox.zenodo.org/api/');
+  expect(zenodo.accessToken).toBe(config.accessToken);
+});
+
 test('authenticate', async () => {
   const logger = new FifoLogger();
   const zenodo = new Zenodo({
