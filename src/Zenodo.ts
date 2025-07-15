@@ -27,6 +27,19 @@ export class Zenodo {
     this.accessToken = accessToken;
   }
 
+  static async create(options: ZenodoOptions): Promise<Zenodo> {
+    const zenodo = new Zenodo(options);
+    const response = await fetchZenodo(zenodo, {
+      route: 'deposit/depositions',
+      expectedStatus: 200,
+    });
+    if (!response.ok) {
+      throw new Error(`Failed to authenticate: ${response.statusText}`);
+    }
+    zenodo.logger?.info('Authenticated successfully');
+    return zenodo;
+  }
+
   async listDepositions(
     options: ListDepositionsOptions = {},
   ): Promise<Deposition[]> {
