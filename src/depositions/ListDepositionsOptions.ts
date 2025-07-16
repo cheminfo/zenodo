@@ -16,7 +16,7 @@ export interface ListDepositionsOptions {
    * Possible values: 'bestmatch' | 'mostrecent'
    * Prefix with minus to change from ascending to descending (e.g., '-mostrecent').
    */
-  sort?: 'bestmatch' | 'mostrecent' | `-${'bestmatch' | 'mostrecent'}`;
+  sort?: 'bestmatch' | 'mostrecent' | '-bestmatch' | '-mostrecent';
 
   /**
    * Page number for pagination.

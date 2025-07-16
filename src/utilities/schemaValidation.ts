@@ -1,7 +1,7 @@
 import Ajv from 'ajv';
 import addFormats from 'ajv-formats';
 import type { Logger } from 'cheminfo-types';
-import pkg from 'orcid-utils';
+import orcidPkg from 'orcid-utils';
 
 import { zenodoDepositionSchema } from './ZenodoDepositionSchema.ts';
 import type { ZenodoDeposition } from './ZenodoDepositionSchema.ts';
@@ -10,7 +10,7 @@ import type { ZenodoFileType } from './ZenodoFileSchema.ts';
 import { zenodoMetadataSchema } from './ZenodoMetadataSchema.ts';
 import type { ZenodoMetadata } from './ZenodoMetadataSchema.ts';
 
-const { ORCID } = pkg;
+const { ORCID } = orcidPkg;
 
 // eslint-disable-next-line new-cap
 const ajv = new Ajv.default({
