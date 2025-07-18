@@ -21,9 +21,6 @@ export class Zenodo {
     this.host = host;
     this.baseURL = `https://${host}/api/`;
     this.logger = logger;
-    if (!accessToken) {
-      throw new Error('accessToken is required');
-    }
     this.accessToken = accessToken;
   }
 
