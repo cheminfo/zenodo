@@ -3,6 +3,7 @@ import { FifoLogger } from 'fifo-logger';
 import { test, expect } from 'vitest';
 
 import { Zenodo } from '../../Zenodo.ts';
+import { getConfig } from '../../__tests__/getConfig.ts';
 import type { ZenodoMetadata } from '../../utilities/ZenodoMetadataSchema.ts';
 
 import { getConfig } from './getConfig.ts';
