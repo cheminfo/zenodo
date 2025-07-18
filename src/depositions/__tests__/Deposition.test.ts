@@ -1,14 +1,381 @@
+/* eslint-disable no-await-in-loop */
 import delay from 'delay';
 import { FifoLogger } from 'fifo-logger';
-import { test, expect } from 'vitest';
+import { test, expect, afterEach, vi } from 'vitest';
 
 import { Zenodo } from '../../Zenodo.ts';
 import { getConfig } from '../../__tests__/getConfig.ts';
 import type { ZenodoMetadata } from '../../utilities/ZenodoMetadataSchema.ts';
 
-import { getConfig } from './getConfig.ts';
-
 const config = getConfig();
+
+afterEach(async () => {
+  const zenodo = await Zenodo.create({
+    host: 'sandbox.zenodo.org',
+    accessToken: config.accessToken || '',
+  });
+  const depositions = await zenodo.listDepositions();
+  const existing = depositions.filter((d) => d.value.state !== 'done');
+  for (const deposition of existing) {
+    if (deposition.value.id !== undefined) {
+      await zenodo.deleteDeposition(deposition.value.id);
+    }
+  }
+});
+
+test('createFiles with retry logic and failures', async () => {
+  const logger = new FifoLogger();
+  const zenodo = new Zenodo({
+    host: 'sandbox.zenodo.org',
+    accessToken: config.accessToken || '',
+    logger,
+  });
+
+  const depositionMetadata: ZenodoMetadata = {
+    upload_type: 'dataset',
+    description: 'test retry logic',
+    access_right: 'open',
+    title: 'test createFiles retry logic',
+    license: 'cc-by-1.0',
+    creators: [{ name: 'test' }],
+  };
+
+  const deposition = await zenodo.createDeposition(depositionMetadata);
+
+  const file1 = new File(['test content 1'], 'test1.txt', {
+    type: 'text/plain',
+  });
+  const file2 = new File(['test content 2'], 'test2.txt', {
+    type: 'text/plain',
+  });
+
+  const results = await deposition.createFiles([file1, file2], {
+    delays: [0, 100, 200], // Short delays for testing
+  });
+
+  expect(results).toHaveLength(2);
+  expect(results.every((r) => r.status === 'fulfilled')).toBe(true);
+
+  const files = await deposition.listFiles();
+  expect(files).toHaveLength(2);
+});
+
+test('createFile error handling', async () => {
+  const logger = new FifoLogger();
+  const zenodo = new Zenodo({
+    host: 'sandbox.zenodo.org',
+    accessToken: config.accessToken || '',
+    logger,
+  });
+
+  const depositionMetadata: ZenodoMetadata = {
+    upload_type: 'dataset',
+    description: 'test error handling',
+    access_right: 'open',
+    title: 'test createFile error handling',
+    license: 'cc-by-1.0',
+    creators: [{ name: 'test' }],
+  };
+
+  const deposition = await zenodo.createDeposition(depositionMetadata);
+
+  const originalCreateFiles = deposition.createFiles.bind(deposition);
+  deposition.createFiles = vi.fn().mockResolvedValue([]);
+
+  const file = new File(['test'], 'test.txt', { type: 'text/plain' });
+
+  await expect(deposition.createFile(file)).rejects.toThrow(
+    'Failed to create file: No status object returned.',
+  );
+
+  deposition.createFiles = originalCreateFiles;
+});
+
+test('retrieveFile method', async () => {
+  const logger = new FifoLogger();
+  const zenodo = new Zenodo({
+    host: 'sandbox.zenodo.org',
+    accessToken: config.accessToken || '',
+    logger,
+  });
+
+  const depositionMetadata: ZenodoMetadata = {
+    upload_type: 'dataset',
+    description: 'test retrieveFile',
+    access_right: 'open',
+    title: 'test retrieveFile method',
+    license: 'cc-by-1.0',
+    creators: [{ name: 'test' }],
+  };
+
+  const deposition = await zenodo.createDeposition(depositionMetadata);
+
+  const fileData = new File(['Hello, World!'], 'example.txt', {
+    type: 'text/plain',
+  });
+  const createdFile = await deposition.createFile(fileData);
+
+  expect(createdFile.status).toBe('fulfilled');
+  expect(createdFile.file).toBeDefined();
+
+  const retrievedFile = await deposition.retrieveFile(
+    // @ts-expect-error createdFile is possibly undefined
+    createdFile.file.value.id,
+  );
+  expect(retrievedFile.value.filename).toBe('example.txt');
+  // @ts-expect-error createdFile is possibly undefined
+  expect(retrievedFile.value.id).toBe(createdFile.file.value.id);
+});
+
+test('update deposition metadata', async () => {
+  const logger = new FifoLogger();
+  const zenodo = new Zenodo({
+    host: 'sandbox.zenodo.org',
+    accessToken: config.accessToken || '',
+    logger,
+  });
+
+  const depositionMetadata: ZenodoMetadata = {
+    upload_type: 'dataset',
+    description: 'original description',
+    access_right: 'open',
+    title: 'original title',
+    license: 'cc-by-1.0',
+    creators: [{ name: 'test' }],
+  };
+
+  const deposition = await zenodo.createDeposition(depositionMetadata);
+
+  const updatedMetadata: ZenodoMetadata = {
+    ...depositionMetadata,
+    description: 'updated description',
+    title: 'updated title',
+  };
+
+  const updatedDeposition = await deposition.update(updatedMetadata);
+
+  expect(updatedDeposition.value.metadata?.description).toBe(
+    'updated description',
+  );
+  expect(updatedDeposition.value.metadata?.title).toBe('updated title');
+  expect(updatedDeposition.value.id).toBe(deposition.value.id);
+});
+
+test.todo('newVersion method', async () => {
+  const logger = new FifoLogger();
+  const zenodo = new Zenodo({
+    host: 'sandbox.zenodo.org',
+    accessToken: config.accessToken || '',
+    logger,
+  });
+
+  const depositionMetadata: ZenodoMetadata = {
+    upload_type: 'dataset',
+    description: 'test newVersion',
+    access_right: 'open',
+    title: 'test newVersion method',
+    license: 'cc-by-1.0',
+    creators: [{ name: 'test' }],
+  };
+
+  const deposition = await zenodo.createDeposition(depositionMetadata);
+
+  const fileData = new File(['Hello, World!'], 'example.txt', {
+    type: 'text/plain',
+  });
+  await deposition.createFile(fileData);
+
+  const publishedDeposition = await deposition.publish();
+  expect(publishedDeposition.value.state).toBe('done');
+
+  const newVersion = await publishedDeposition.newVersion();
+  expect(newVersion.value.id).not.toBe(deposition.value.id);
+  expect(newVersion.value.state).toBe('unsubmitted');
+
+  expect(newVersion.value.metadata?.publication_date).toBeDefined();
+  expect(newVersion.value.metadata?.publication_date).toMatch(
+    /^\d{4}-\d{2}-\d{2}$/,
+  );
+});
+
+test.todo('submitForReview without URL', async () => {
+  const logger = new FifoLogger();
+  const zenodo = new Zenodo({
+    host: 'sandbox.zenodo.org',
+    accessToken: config.accessToken || '',
+    logger,
+  });
+
+  const depositionMetadata: ZenodoMetadata = {
+    upload_type: 'dataset',
+    description: 'test submitForReview',
+    access_right: 'open',
+    title: 'test submitForReview method',
+    license: 'cc-by-1.0',
+    creators: [{ name: 'test' }],
+  };
+
+  const deposition = await zenodo.createDeposition(depositionMetadata);
+
+  const fileData = new File(['Hello, World!'], 'example.txt', {
+    type: 'text/plain',
+  });
+  await deposition.createFile(fileData);
+
+  const review = await deposition.submitForReview();
+  expect(review).toBeDefined();
+  expect(review.topic.record).toBe(String(deposition.value.id));
+});
+
+test.todo('submitForReview with URL', async () => {
+  const logger = new FifoLogger();
+  const zenodo = new Zenodo({
+    host: 'sandbox.zenodo.org',
+    accessToken: config.accessToken || '',
+    logger,
+  });
+
+  const depositionMetadata: ZenodoMetadata = {
+    upload_type: 'dataset',
+    description: 'test submitForReview with URL',
+    access_right: 'open',
+    title: 'test submitForReview with URL method',
+    license: 'cc-by-1.0',
+    creators: [{ name: 'test' }],
+  };
+
+  const deposition = await zenodo.createDeposition(depositionMetadata);
+
+  const fileData = new File(['Hello, World!'], 'example.txt', {
+    type: 'text/plain',
+  });
+  await deposition.createFile(fileData);
+
+  const reviewWithoutUrl = await deposition.submitForReview();
+
+  const submitUrl = reviewWithoutUrl.links.actions?.submit;
+  expect(submitUrl).toBeDefined();
+
+  const reviewWithUrl = await deposition.submitForReview(submitUrl);
+  expect(reviewWithUrl).toBeDefined();
+});
+
+test('createFiles with mixed success and failure scenarios', async () => {
+  const logger = new FifoLogger();
+  const zenodo = new Zenodo({
+    host: 'sandbox.zenodo.org',
+    accessToken: config.accessToken || '',
+    logger,
+  });
+
+  const depositionMetadata: ZenodoMetadata = {
+    upload_type: 'dataset',
+    description: 'test mixed scenarios',
+    access_right: 'open',
+    title: 'test mixed success/failure scenarios',
+    license: 'cc-by-1.0',
+    creators: [{ name: 'test' }],
+  };
+
+  const deposition = await zenodo.createDeposition(depositionMetadata);
+
+  // Create files with very short delays to test retry logic
+  const file1 = new File(['content 1'], 'file1.txt', { type: 'text/plain' });
+  const file2 = new File(['content 2'], 'file2.txt', { type: 'text/plain' });
+  const file3 = new File(['content 3'], 'file3.txt', { type: 'text/plain' });
+
+  const results = await deposition.createFiles([file1, file2, file3], {
+    delays: [0, 50, 100, 150], // Multiple retry attempts
+  });
+
+  expect(results).toHaveLength(3);
+
+  for (const result of results) {
+    expect(result.status).toMatch(/^(?:fulfilled|rejected)$/);
+    expect(result.filename).toBeDefined();
+    if (result.status === 'fulfilled') {
+      expect(result.file).toBeDefined();
+    } else {
+      expect(result.error).toBeDefined();
+    }
+  }
+});
+
+test('deleteFile method', async () => {
+  const logger = new FifoLogger();
+  const zenodo = new Zenodo({
+    host: 'sandbox.zenodo.org',
+    accessToken: config.accessToken || '',
+    logger,
+  });
+
+  const depositionMetadata: ZenodoMetadata = {
+    upload_type: 'dataset',
+    description: 'test deleteFile',
+    access_right: 'open',
+    title: 'test deleteFile method',
+    license: 'cc-by-1.0',
+    creators: [{ name: 'test' }],
+  };
+
+  const deposition = await zenodo.createDeposition(depositionMetadata);
+
+  const fileData = new File(['Hello, World!'], 'example.txt', {
+    type: 'text/plain',
+  });
+  const createdFile = await deposition.createFile(fileData);
+
+  expect(createdFile.status).toBe('fulfilled');
+  expect(createdFile.file).toBeDefined();
+
+  let files = await deposition.listFiles();
+  expect(files).toHaveLength(1);
+
+  // @ts-expect-error createdFile is possibly undefined
+  await deposition.deleteFile(createdFile.file.value.id);
+
+  files = await deposition.listFiles();
+  expect(files).toHaveLength(0);
+});
+
+test('createFilesAsZip method', async () => {
+  const logger = new FifoLogger();
+  const zenodo = new Zenodo({
+    host: 'sandbox.zenodo.org',
+    accessToken: config.accessToken || '',
+    logger,
+  });
+
+  const depositionMetadata: ZenodoMetadata = {
+    upload_type: 'dataset',
+    description: 'test createFilesAsZip',
+    access_right: 'open',
+    title: 'test createFilesAsZip method',
+    license: 'cc-by-1.0',
+    creators: [{ name: 'test' }],
+  };
+
+  const deposition = await zenodo.createDeposition(depositionMetadata);
+
+  const file1 = new File(['content 1'], 'file1.txt', { type: 'text/plain' });
+  const file2 = new File(['content 2'], 'file2.txt', { type: 'text/plain' });
+
+  const results = await deposition.createFilesAsZip([file1, file2], {
+    zipName: 'custom-archive',
+    delays: [0, 100],
+  });
+
+  expect(results).toHaveLength(1);
+  // @ts-expect-error results is possibly undefined
+  expect(results[0].status).toBe('fulfilled');
+  // @ts-expect-error results is possibly undefined
+  expect(results[0].filename).toBe('custom-archive.zip');
+
+  const files = await deposition.listFiles();
+  expect(files).toHaveLength(1);
+  // @ts-expect-error files is possibly undefined
+  expect(files[0].value.filename).toBe('custom-archive.zip');
+});
 
 test('basic deposition manipulations', async () => {
   const logger = new FifoLogger();
@@ -20,9 +387,9 @@ test('basic deposition manipulations', async () => {
 
   const depositionMetadata: ZenodoMetadata = {
     upload_type: 'dataset',
-    description: 'test',
+    description: 'test basic deposition manipulations',
     access_right: 'open',
-    title: 'test dataset from npm library zenodo',
+    title: 'test basic manipulations from npm library zenodo',
     license: 'cc-by-1.0',
     creators: [
       {
@@ -80,12 +447,13 @@ test('add to community', async () => {
     upload_type: 'dataset',
     description: 'test',
     access_right: 'open',
-    title: 'test dataset from npm library zenodo',
+    title: 'test community',
     creators: [
       {
         name: 'test',
       },
     ],
+    license: 'cc-by-1.0',
   };
   const deposition = await zenodo.createDeposition(depositionMetadata);
   const firstFileData = new File(['Hello, World!'], 'example.txt', {
@@ -105,7 +473,6 @@ test('add to community', async () => {
   expect(request.topic.record).toEqual(String(deposition.value.id));
 });
 
-// skipping this test as it makes the deposition undeletable by publishing it
 test.todo('publish deposition', async () => {
   const logger = new FifoLogger();
   const zenodo = new Zenodo({
@@ -118,7 +485,7 @@ test.todo('publish deposition', async () => {
     upload_type: 'dataset',
     description: 'test',
     access_right: 'open',
-    title: 'test dataset from npm library zenodo',
+    title: 'test publish from npm library zenodo',
     creators: [
       {
         name: 'test',
@@ -136,7 +503,7 @@ test.todo('publish deposition', async () => {
 
   const newVersion = await publishedDeposition.newVersion();
   expect(newVersion.value.id).not.toBe(deposition.value.id);
-  expect(newVersion.value.state).toBe('draft');
+  expect(newVersion.value.state).toBe('unsubmitted');
 
   // @ts-expect-error newVersion is unknown type
   const versions = await zenodo.retrieveVersions(newVersion.value.id);
@@ -161,7 +528,7 @@ test.skip('submit for review', async () => {
     upload_type: 'dataset',
     description: 'test',
     access_right: 'open',
-    title: 'test dataset from npm library zenodo',
+    title: 'test submit for review from npm library zenodo',
     creators: [
       {
         name: 'test',
@@ -172,6 +539,6 @@ test.skip('submit for review', async () => {
   const deposition = await zenodo.createDeposition(depositionMetadata);
   expect(deposition.value.id).toBeDefined();
 
-  const submittedDeposition = await deposition.submitForReview();
-  expect(submittedDeposition.value.id).toBe(deposition.value.id);
+  await deposition.submitForReview();
+  await zenodo.retrieveRequests();
 });

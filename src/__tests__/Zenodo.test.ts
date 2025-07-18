@@ -1,7 +1,6 @@
 /* eslint-disable no-await-in-loop */
-/* eslint-disable no-new */
 import { FifoLogger } from 'fifo-logger';
-import { test, expect } from 'vitest';
+import { test, expect, afterEach } from 'vitest';
 
 import { Zenodo } from '../Zenodo.ts';
 import type { ZenodoMetadata } from '../utilities/ZenodoMetadataSchema.ts';
@@ -10,13 +9,30 @@ import { getConfig } from './getConfig.ts';
 
 const config = getConfig();
 
-test('no token', async () => {
-  expect(() => {
-    // @ts-expect-error we are testing the error
-    new Zenodo({
-      host: 'sandbox.zenodo.org',
-    });
-  }).toThrow('accessToken is required');
+afterEach(async () => {
+  const zenodo = await Zenodo.create({
+    host: 'sandbox.zenodo.org',
+    accessToken: config.accessToken || '',
+  });
+  const depositions = await zenodo.listDepositions();
+  const existing = depositions.filter((d) => d.value.state !== 'done');
+  for (const deposition of existing) {
+    if (deposition.value.id !== undefined) {
+      await zenodo.deleteDeposition(deposition.value.id);
+    }
+  }
+});
+
+test('no token', async ({ expect }) => {
+  // @ts-expect-error we are testing the error
+  const zenodo = new Zenodo({
+    host: 'sandbox.zenodo.org',
+  });
+  const publicDepositions = await zenodo.retrieveRecord(290289);
+  expect(publicDepositions.value.id).toBe(290289);
+  await expect(publicDepositions.getDeposition()).rejects.toThrow(
+    'Access token is required to retrieve a deposition',
+  );
 });
 
 test('create zenodo', async () => {
@@ -32,6 +48,19 @@ test('create zenodo', async () => {
   expect(zenodo.accessToken).toBe(config.accessToken);
 });
 
+test('create zenodo without token', async () => {
+  const logger = new FifoLogger();
+  await expect(
+    Zenodo.create({
+      host: 'sandbox.zenodo.org',
+      accessToken: '',
+      logger,
+    }),
+  ).rejects.toThrow(
+    'Request failed, due to missing authorization (e.g. deleting an already submitted upload or missing scopes for your access token). Error response included.',
+  );
+});
+
 test('authenticate', async () => {
   const logger = new FifoLogger();
   const zenodo = new Zenodo({
@@ -40,13 +69,11 @@ test('authenticate', async () => {
     logger,
   });
 
-  const existing = await zenodo.listDepositions();
-
   const depositionMetadata: ZenodoMetadata = {
     upload_type: 'dataset',
-    description: 'test',
+    description: 'test zenodo authentication',
     access_right: 'open',
-    title: 'test dataset from npm library zenodo',
+    title: 'test zenodo authentication',
     creators: [
       {
         name: 'test',
@@ -111,16 +138,14 @@ test('authenticate', async () => {
 
   expect(content).toBe('Hello, world!');
 
-  // we delete everything
-  for (const deposition of existing) {
-    if (
-      deposition.value.id !== undefined &&
-      deposition.value.state !== 'done'
-    ) {
-      await zenodo.deleteDeposition(deposition.value.id);
-    }
-  }
+  const requests = await zenodo.retrieveRequests();
+  expect(requests.hits.total).toBe(0);
+
+  const versions = await zenodo.retrieveVersions(287116);
+  expect(versions.length).toBeGreaterThanOrEqual(2);
+  // @ts-expect-error versions is not typed in zenodo
+  expect(versions[0].id).toBe(287116);
 
   const logs = logger.getLogs();
-  expect(logs.length).toBeGreaterThanOrEqual(13);
+  expect(logs.length).toBeGreaterThanOrEqual(12);
 }, 15000);
