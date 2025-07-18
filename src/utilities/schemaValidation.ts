@@ -13,6 +13,7 @@ import type { ZenodoRecord } from './ZenodoRecordSchema.ts';
 import { zenodoRecordSchema } from './ZenodoRecordSchema.ts';
 import { ZenodoReviewSchema } from './ZenodoReviewSchema.ts';
 import type { ZenodoReview } from './ZenodoReviewSchema.ts';
+import { licenseEnum } from './licensesEnum.ts';
 
 const { ORCID } = orcidPkg;
 
@@ -59,22 +60,16 @@ export function validateZenodoDeposition(
   deposition: unknown,
   logger?: Logger,
 ): ZenodoDeposition {
-  const licenses: string[] =
-    zenodoDepositionSchema.properties.metadata.definitions[
-      'license-enum'
-    ].enum.flat();
+  const licenses: string[] = [...licenseEnum.enum];
   const isValid = validateDeposition(deposition);
   if (!isValid) {
     throw new Error(JSON.stringify(validateDeposition.errors, null, 2));
   }
-  const validatedDeposition = deposition as ZenodoDeposition;
+  const validatedDeposition = deposition as ZenodoDeposition | ZenodoRecord;
 
-  const license =
-    typeof validatedDeposition?.metadata?.license === 'string'
-      ? validatedDeposition.metadata.license
-      : validatedDeposition?.metadata?.license?.id;
+  const license = validatedDeposition.metadata?.license;
 
-  if (!license || !licenses.includes(license)) {
+  if (!license) {
     logger?.warn(
       `Invalid license "${license}". Valid licenses are: ${licenses.join(', ')}`,
     );
