@@ -6,6 +6,7 @@ import { ZenodoFile } from '../ZenodoFile.ts';
 import { fetchZenodo } from '../fetchZenodo.ts';
 import type { ZenodoDeposition } from '../utilities/ZenodoDepositionSchema.ts';
 import type { ZenodoMetadata } from '../utilities/ZenodoMetadataSchema.ts';
+import type { ZenodoReview } from '../utilities/ZenodoReviewSchema.ts';
 import { validateZenodoDeposition } from '../utilities/schemaValidation.ts';
 import { zipFiles } from '../utilities/zipFiles.ts';
 
@@ -284,61 +285,52 @@ export class Deposition {
   }
 
   /**
-   * Submits the deposition for review by the community.
-   * @returns Deposition - the updated deposition object after submission
-   */
-  async submitForReview(): Promise<Deposition> {
-    const response = await fetchZenodo(this.zenodo, {
-      route: `records/${this.value.id}/actions/submit-review`,
-      method: 'POST',
-      expectedStatus: 202,
-    });
-    const deposition = new Deposition(this.zenodo, await response.json());
-    this.zenodo.logger?.info(
-      `Submitted deposition ${this.value.id} for review`,
-    );
-    return deposition;
-  }
-
-  /**
    * Submits the deposition for review via browser.
    * CORS request won't work from the other endpoint when using a browser.
    * If a URL is provided, it will use that URL to submit the request.
    * Otherwise, it will find the request for the current deposition and submit it.
+   * This is not the intended endpoint for submitting requests via browser.
+   * But the base endpoint is not CORS enabled.
+   * You can find the method with the right endpoint at:
+   * https://github.com/cheminfo/zenodo/blob/7fbf3e8bb44246b3465b94b68c21cd3f4fee3bf6/src/depositions/Deposition.ts#L286-L301
    * @param url - optional URL to submit the request
+   * @returns The submitted Zenodo request object
    */
-  async submitForReviewBrowser(url?: string): Promise<void> {
+  async submitForReview(url?: string): Promise<ZenodoReview> {
     if (url) {
       // If a URL is provided, we assume it's a full API endpoint for submitting the request
       url = url.replace(/.*requests\//, 'requests/');
-      await fetchZenodo(this.zenodo, {
+      const response = await fetchZenodo(this.zenodo, {
         route: url,
         method: 'POST',
       });
+      this.zenodo.logger?.info(
+        `Submitted deposition ${this.value.id} for review via URL ${url}`,
+      );
+      return (await response.json()) as ZenodoReview;
     } else {
       const response = await fetchZenodo(this.zenodo, {
         route: `requests`,
       });
       const requests = (await response.json()) as {
         hits: {
-          hits: Array<{
-            topic: { record: string };
-            links: { actions: { submit: string } };
-          }>;
+          total: number;
+          hits: ZenodoReview[];
         };
       };
       const request = requests.hits.hits.find(
         (req) => req.topic.record === String(this.value.id),
       );
       await fetchZenodo(this.zenodo, {
-        route: request?.links.actions.submit,
+        route: request?.links.actions?.submit,
         method: 'POST',
         expectedStatus: 202,
       });
+      this.zenodo.logger?.info(
+        `Submitted deposition ${this.value.id} for review`,
+      );
+      return request as ZenodoReview;
     }
-    this.zenodo.logger?.info(
-      `Submitted deposition ${this.value.id} for review via browser`,
-    );
   }
 
   /**
