@@ -30,7 +30,9 @@ export interface ListDepositionsOptions {
 
   /**
    * Show or hide all versions of deposits.
+   * the query is not camelCase but for consistency with other options.
+   * the query is translated to `all_versions` in this library.
    * Possible values: 'true' | 'false' | 1 | 0
    */
-  all_versions?: 'true' | 'false' | 1 | 0;
+  allVersions?: 'true' | 'false' | 1 | 0;
 }

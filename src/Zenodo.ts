@@ -44,8 +44,14 @@ export class Zenodo {
   ): Promise<Deposition[]> {
     // all the values must be string
     const optionsWithStrings = Object.fromEntries(
-      Object.entries(options).map(([key, value]) => [key, String(value)]),
+      Object.entries(options).map(([key, value]) => {
+        if (key === 'allVersions') {
+          return ['all_versions', String(value)];
+        }
+        return [key, String(value)];
+      }),
     );
+
     const response = await fetchZenodo(this, {
       route: 'deposit/depositions',
       searchParams: optionsWithStrings,
