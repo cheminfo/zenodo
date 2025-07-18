@@ -2,8 +2,10 @@ import type { Logger } from 'cheminfo-types';
 
 import { Deposition } from './depositions/Deposition.ts';
 import type { ListDepositionsOptions } from './depositions/ListDepositionsOptions.ts';
+import { Record } from './depositions/Record.ts';
 import { fetchZenodo } from './fetchZenodo.ts';
 import type { ZenodoMetadata } from './utilities/ZenodoMetadataSchema.ts';
+import type { ZenodoReview } from './utilities/ZenodoReviewSchema.ts';
 
 interface ZenodoOptions {
   accessToken: string;
@@ -74,6 +76,39 @@ export class Zenodo {
     const deposition = await response.json();
     this.logger?.info(`Retrieved deposition ${id}`);
     return new Deposition(this, deposition);
+  }
+
+  /**
+   * Retrieve a public deposition record
+   * @param id - the deposition id
+   * @throws {Error} If the deposition does not exist or the ID is undefined
+   * @returns - The public deposition record
+   */
+  async retrieveRecord(id: number): Promise<Record> {
+    const response = await fetchZenodo(this, {
+      route: `records/${id}`,
+    });
+    const deposition = await response.json();
+    this.logger?.info(`Retrieved public deposition ${id}`);
+    return new Record(this, deposition);
+  }
+
+  async retrieveRequests(
+    depositionId?: number,
+  ): Promise<{ hits: { total: number; hits: ZenodoReview[] } }> {
+    const response = await fetchZenodo(this, {
+      route: `requests/`,
+      searchParams: {
+        q: String(depositionId),
+      },
+    });
+    const requests = (await response.json()) as {
+      hits: { total: number; hits: ZenodoReview[] };
+    };
+    this.logger?.info(
+      `Retrieved ${requests.hits.total} requests for deposition ${depositionId}`,
+    );
+    return requests;
   }
 
   /**
