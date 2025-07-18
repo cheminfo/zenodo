@@ -9,6 +9,10 @@ import { zenodoFileSchema } from './ZenodoFileSchema.ts';
 import type { ZenodoFileType } from './ZenodoFileSchema.ts';
 import { zenodoMetadataSchema } from './ZenodoMetadataSchema.ts';
 import type { ZenodoMetadata } from './ZenodoMetadataSchema.ts';
+import type { ZenodoRecord } from './ZenodoRecordSchema.ts';
+import { zenodoRecordSchema } from './ZenodoRecordSchema.ts';
+import { ZenodoReviewSchema } from './ZenodoReviewSchema.ts';
+import type { ZenodoReview } from './ZenodoReviewSchema.ts';
 
 const { ORCID } = orcidPkg;
 
@@ -87,6 +91,21 @@ export function validateZenodoDeposition(
   return validatedDeposition;
 }
 
+const validateRecord = ajv.compile(zenodoRecordSchema);
+/**
+ * Validate Zenodo record against the schema
+ * @param record - Zenodo record object to validate
+ * @throws {Error} If the record does not conform to the Zenodo schema
+ * @returns The validated Zenodo record object
+ */
+export function validateZenodoRecord(record: unknown): ZenodoRecord {
+  const isValid = validateRecord(record);
+  if (!isValid) {
+    throw new Error(JSON.stringify(validateRecord.errors, null, 2));
+  }
+  return record as ZenodoRecord;
+}
+
 const validateFile = ajv.compile(zenodoFileSchema);
 /**
  * Validate Zenodo file against the schema
@@ -100,6 +119,22 @@ export function validateZenodoFile(file: unknown): ZenodoFileType {
     throw new Error(JSON.stringify(validateMetadata.errors, null, 2));
   }
   return file as ZenodoFileType;
+}
+
+const validateRequest = ajv.compile(ZenodoReviewSchema);
+
+/**
+ * Validate Zenodo request against the schema
+ * @param request - Zenodo request object to validate
+ * @throws {Error} If the request does not conform to the Zenodo schema
+ * @returns The validated Zenodo request object
+ */
+export function validateZenodoRequest(request: unknown): ZenodoReview {
+  const isValid = validateRequest(request);
+  if (!isValid) {
+    throw new Error(JSON.stringify(validateRequest.errors, null, 2));
+  }
+  return request as ZenodoReview;
 }
 
 /**
