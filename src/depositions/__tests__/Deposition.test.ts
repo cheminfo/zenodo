@@ -49,12 +49,10 @@ test('createFiles with retry logic and failures', async () => {
     type: 'text/plain',
   });
 
-  const results = await deposition.createFiles([file1, file2], {
-    delays: [0, 100, 200], // Short delays for testing
-  });
+  const results = await deposition.createFiles([file1, file2]);
 
   expect(results).toHaveLength(2);
-  expect(results.every((r) => r.status === 'fulfilled')).toBe(true);
+  expect(results[0]?.value.filename).toBe('test1.txt');
 
   const files = await deposition.listFiles();
   expect(files).toHaveLength(2);
@@ -115,16 +113,12 @@ test('retrieveFile method', async () => {
   });
   const createdFile = await deposition.createFile(fileData);
 
-  expect(createdFile.status).toBe('fulfilled');
-  expect(createdFile.file).toBeDefined();
+  expect(createdFile.value).toBeDefined();
+  expect(createdFile.value.filename).toBe('example.txt');
 
-  const retrievedFile = await deposition.retrieveFile(
-    // @ts-expect-error createdFile is possibly undefined
-    createdFile.file.value.id,
-  );
+  const retrievedFile = await deposition.retrieveFile(createdFile.value.id);
   expect(retrievedFile.value.filename).toBe('example.txt');
-  // @ts-expect-error createdFile is possibly undefined
-  expect(retrievedFile.value.id).toBe(createdFile.file.value.id);
+  expect(retrievedFile.value.id).toBe(createdFile.value.id);
 });
 
 test('update deposition metadata', async () => {
@@ -260,47 +254,6 @@ test.todo('submitForReview with URL', async () => {
   expect(reviewWithUrl).toBeDefined();
 });
 
-test('createFiles with mixed success and failure scenarios', async () => {
-  const logger = new FifoLogger();
-  const zenodo = new Zenodo({
-    host: 'sandbox.zenodo.org',
-    accessToken: config.accessToken || '',
-    logger,
-  });
-
-  const depositionMetadata: ZenodoMetadata = {
-    upload_type: 'dataset',
-    description: 'test mixed scenarios',
-    access_right: 'open',
-    title: 'test mixed success/failure scenarios',
-    license: 'cc-by-1.0',
-    creators: [{ name: 'test' }],
-  };
-
-  const deposition = await zenodo.createDeposition(depositionMetadata);
-
-  // Create files with very short delays to test retry logic
-  const file1 = new File(['content 1'], 'file1.txt', { type: 'text/plain' });
-  const file2 = new File(['content 2'], 'file2.txt', { type: 'text/plain' });
-  const file3 = new File(['content 3'], 'file3.txt', { type: 'text/plain' });
-
-  const results = await deposition.createFiles([file1, file2, file3], {
-    delays: [0, 50, 100, 150], // Multiple retry attempts
-  });
-
-  expect(results).toHaveLength(3);
-
-  for (const result of results) {
-    expect(result.status).toMatch(/^(?:fulfilled|rejected)$/);
-    expect(result.filename).toBeDefined();
-    if (result.status === 'fulfilled') {
-      expect(result.file).toBeDefined();
-    } else {
-      expect(result.error).toBeDefined();
-    }
-  }
-});
-
 test('deleteFile method', async () => {
   const logger = new FifoLogger();
   const zenodo = new Zenodo({
@@ -325,14 +278,13 @@ test('deleteFile method', async () => {
   });
   const createdFile = await deposition.createFile(fileData);
 
-  expect(createdFile.status).toBe('fulfilled');
-  expect(createdFile.file).toBeDefined();
+  expect(createdFile.value).toBeDefined();
+  expect(createdFile.value.filename).toBe('example.txt');
 
   let files = await deposition.listFiles();
   expect(files).toHaveLength(1);
 
-  // @ts-expect-error createdFile is possibly undefined
-  await deposition.deleteFile(createdFile.file.value.id);
+  await deposition.deleteFile(createdFile.value.id);
 
   files = await deposition.listFiles();
   expect(files).toHaveLength(0);
@@ -360,21 +312,17 @@ test('createFilesAsZip method', async () => {
   const file1 = new File(['content 1'], 'file1.txt', { type: 'text/plain' });
   const file2 = new File(['content 2'], 'file2.txt', { type: 'text/plain' });
 
-  const results = await deposition.createFilesAsZip([file1, file2], {
-    zipName: 'custom-archive',
-    delays: [0, 100],
-  });
+  const results = await deposition.createFilesAsZip(
+    [file1, file2],
+    'custom-archive',
+  );
 
   expect(results).toHaveLength(1);
-  // @ts-expect-error results is possibly undefined
-  expect(results[0].status).toBe('fulfilled');
-  // @ts-expect-error results is possibly undefined
-  expect(results[0].filename).toBe('custom-archive.zip');
+  expect(results[0]?.value.filename).toBe('custom-archive.zip');
 
   const files = await deposition.listFiles();
   expect(files).toHaveLength(1);
-  // @ts-expect-error files is possibly undefined
-  expect(files[0].value.filename).toBe('custom-archive.zip');
+  expect(files[0]?.value.filename).toBe('custom-archive.zip');
 });
 
 test('basic deposition manipulations', async () => {
@@ -416,9 +364,7 @@ test('basic deposition manipulations', async () => {
   const fourthFileData = new File(['Hello, world 4!'], 'example4.txt', {
     type: 'text/plain',
   });
-  await deposition.createFilesAsZip([fourthFileData], {
-    zipName: 'example4.zip',
-  });
+  await deposition.createFilesAsZip([fourthFileData], 'example4.zip');
 
   const files = await deposition.listFiles();
   expect(files.length).toBe(4);
@@ -433,7 +379,7 @@ test('basic deposition manipulations', async () => {
   }
 
   const logs = logger.getLogs();
-  expect(logs.length).toBeGreaterThanOrEqual(17);
+  expect(logs.length).toBeGreaterThanOrEqual(14);
 }, 10000);
 
 test('add to community', async () => {

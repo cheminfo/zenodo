@@ -93,30 +93,26 @@ test('authenticate', async () => {
     type: 'text/plain',
   });
   const firstFile = await firstDeposition.createFile(firstFileData);
-  expect(firstFile.file?.value.filesize).toBe(13);
-  expect(firstFile.file?.value.checksum).toBe(
-    '6cd3556deb0da54bca060b4c39479839',
-  );
+  expect(firstFile.value.filesize).toBe(13);
+  expect(firstFile.value.checksum).toBe('6cd3556deb0da54bca060b4c39479839');
 
   const secondFileData = new File(['Hello, world 2!'], 'example2.txt', {
     type: 'text/plain',
   });
   const secondFile = await firstDeposition.createFile(secondFileData);
-  expect(secondFile.file?.value.filesize).toBe(15);
-  expect(secondFile.file?.value.checksum).toBe(
-    '9500d92e2fa89ecbdc90cd890ca16ed0',
-  );
+  expect(secondFile.value.filesize).toBe(15);
+  expect(secondFile.value.checksum).toBe('9500d92e2fa89ecbdc90cd890ca16ed0');
   const thirdFileData = new File(['Hello, world 3!'], 'example3.txt', {
     type: 'text/plain',
   });
-  const thirdFile = await firstDeposition.createFilesAsZip([thirdFileData], {
-    zipName: 'example3',
-  });
+  const thirdFile = await firstDeposition.createFilesAsZip(
+    [thirdFileData],
+    'example3',
+  );
 
-  // @ts-expect-error thirdFile is not typed in zenodo
-  expect(thirdFile[0].filename).toBe('example3.zip');
-  // @ts-expect-error thirdFile is not typed in zenodo
-  expect(thirdFile[0].file?.value.filesize).toBe(269);
+  expect(thirdFile[0]?.value.filename).toBe('example3.zip');
+  // @ts-expect-error thirdFile is possibly undefined
+  expect(thirdFile[0].value.filesize).toBe(269);
 
   const files = await firstDeposition.listFiles();
   files.sort((a, b) => a.value.filename.localeCompare(b.value.filename));
@@ -147,5 +143,5 @@ test('authenticate', async () => {
   expect(versions[0].id).toBe(287116);
 
   const logs = logger.getLogs();
-  expect(logs.length).toBeGreaterThanOrEqual(12);
+  expect(logs.length).toBeGreaterThanOrEqual(11);
 }, 15000);
