@@ -1,6 +1,4 @@
 /* eslint-disable no-await-in-loop */
-import delay from 'delay';
-
 import type { Zenodo } from '../Zenodo.ts';
 import { ZenodoFile } from '../ZenodoFile.ts';
 import { fetchZenodo } from '../fetchZenodo.ts';
@@ -9,19 +7,6 @@ import type { ZenodoMetadata } from '../utilities/ZenodoMetadataSchema.ts';
 import type { ZenodoReview } from '../utilities/ZenodoReviewSchema.ts';
 import { validateZenodoDeposition } from '../utilities/schemaValidation.ts';
 import { zipFiles } from '../utilities/zipFiles.ts';
-
-interface ZenodoFileCreationOptions {
-  delays?: number[];
-  zip?: boolean;
-  zipName?: string;
-}
-
-interface StatusObject {
-  status: 'fulfilled' | 'rejected';
-  error?: string;
-  file?: ZenodoFile;
-  filename: string;
-}
 
 export class Deposition {
   private zenodo: Zenodo;
@@ -38,7 +23,7 @@ export class Deposition {
    * @param file - the file to create in the deposition
    * @returns ZenodoFile - the created file object
    */
-  async createFile(file: File): Promise<StatusObject> {
+  async createFile(file: File): Promise<ZenodoFile> {
     const createdFile = await this.createFiles([file]);
     if (!createdFile[0]) {
       throw new Error('Failed to create file: No status object returned.');
@@ -51,96 +36,25 @@ export class Deposition {
    * multiple times with delays in between until all files are successfully created or
    * the maximum number of attempts is reached.
    * @param filesAndNames - an array of File objects to be created in the deposition
-   * @param options - options for file creation
-   * @param options.delays - an array of delays in milliseconds to wait between attempts
-   * @returns StatusObject[] - an array of objects representing the status of each file creation attempt
-   *                            Each object contains the status ('fulfilled' or 'rejected'),
-   *                            the error message (if any), the created ZenodoFile (if fulfilled),
-   *                            and the filename.
+   * @returns ZenodoFile[] - an array of the created ZenodoFile objects
    */
-  async createFiles(
-    filesAndNames: File[],
-    options: ZenodoFileCreationOptions = {},
-  ): Promise<StatusObject[]> {
-    const { delays = [0, 1000, 2000, 4000, 8000, 16000] } = options;
-    let remaining = filesAndNames.slice();
-    const successes: ZenodoFile[] = [];
-    let results: Array<PromiseSettledResult<ZenodoFile>> = [];
-    const statuses: StatusObject[] = [];
-
-    for (const wait of delays) {
-      await delay(wait);
-
-      const promises = remaining.map((file) => this.uploadFile(file));
-
-      results = await Promise.allSettled(promises);
-
-      successes.push(
-        ...results
-          .filter(
-            (result): result is PromiseFulfilledResult<ZenodoFile> =>
-              result.status === 'fulfilled',
-          )
-          .map((result) => result.value),
-      );
-
-      const rejectedIndices = new Set(
-        results
-          .map((result, i) => (result.status === 'rejected' ? i : -1))
-          .filter((index) => index !== -1),
-      );
-      remaining = remaining.filter((_, i) => rejectedIndices.has(i));
-      if (remaining.length === 0) break;
-    }
-
-    if (remaining.length > 0) {
-      this.zenodo.logger?.warn(
-        `Failed to upload ${remaining.length} files after ${delays.length} attempts: ${remaining.map((f) => f.name).join(', ')}`,
-      );
-    } else {
-      this.zenodo.logger?.info(
-        `Successfully uploaded all files for deposition ${this.value.id}`,
-      );
-    }
-    statuses.push(
-      ...results.map((result, index): StatusObject => {
-        if (result.status === 'fulfilled') {
-          return {
-            status: 'fulfilled',
-            file: result.value,
-            filename: result.value.value.filename,
-          };
-        } else {
-          return {
-            status: 'rejected',
-            error:
-              result.reason instanceof Error
-                ? result.reason.message
-                : String(result.reason),
-            filename: remaining[index] ? remaining[index].name : 'unknown',
-          };
-        }
-      }),
-    );
-    return statuses;
+  async createFiles(filesAndNames: File[]): Promise<ZenodoFile[]> {
+    const promises = filesAndNames.map((file) => this.uploadFile(file));
+    return await Promise.all(promises);
   }
 
   /**
    * Creates a zip file from multiple files and uploads it to the deposition.
    * @param filesAndNames - an array of File objects to be created in the deposition
-   * @param options - options for file creation
-   * @returns StatusObject[] - an array of objects representing the status of each file creation attempt
+   * @param zipName - the name of the zip file to be created
+   * @returns ZenodoFile[] - an array of the created ZenodoFile objects
    */
   async createFilesAsZip(
     filesAndNames: File[],
-    options: ZenodoFileCreationOptions = {},
-  ): Promise<StatusObject[]> {
-    const {
-      delays = [0, 1000, 2000, 4000, 8000, 16000],
-      zipName = 'data.zip',
-    } = options;
+    zipName: string,
+  ): Promise<ZenodoFile[]> {
     const zippedFile = await zipFiles(filesAndNames, zipName);
-    return this.createFiles([zippedFile], { delays });
+    return this.createFiles([zippedFile]);
   }
 
   /**
