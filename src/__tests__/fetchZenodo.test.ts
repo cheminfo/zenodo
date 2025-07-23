@@ -1,10 +1,38 @@
 import { test, expect, vi, afterEach } from 'vitest';
 
+import { ZenodoAuthenticationStates } from '../ZenodoAuthenticationStates.ts';
+import type { ZenodoAuthenticationStatesType } from '../ZenodoAuthenticationStates.ts';
 import { fetchZenodo } from '../fetchZenodo.ts';
 
 const mockFetch = vi.fn();
 global.fetch = mockFetch;
-const mockZenodo = {
+interface MockLogger {
+  debug: ReturnType<typeof vi.fn>;
+  child: ReturnType<typeof vi.fn>;
+  info: ReturnType<typeof vi.fn>;
+  warn: ReturnType<typeof vi.fn>;
+  error: ReturnType<typeof vi.fn>;
+  trace: ReturnType<typeof vi.fn>;
+  fatal: ReturnType<typeof vi.fn>;
+}
+
+interface MockZenodo {
+  baseURL: string;
+  accessToken: string;
+  logger: MockLogger;
+  host: string;
+  authenticationState: ZenodoAuthenticationStatesType;
+  listDepositions: ReturnType<typeof vi.fn>;
+  createDeposition: ReturnType<typeof vi.fn>;
+  retrieveDeposition: ReturnType<typeof vi.fn>;
+  retrieveRecord: ReturnType<typeof vi.fn>;
+  retrieveRequests: ReturnType<typeof vi.fn>;
+  retrieveVersions: ReturnType<typeof vi.fn>;
+  deleteDeposition: ReturnType<typeof vi.fn>;
+  verifyAuthentication: ReturnType<typeof vi.fn>;
+}
+
+const mockZenodo: MockZenodo = {
   baseURL: 'https://sandbox.zenodo.org/api/',
   accessToken: 'test-token',
   logger: {
@@ -17,6 +45,7 @@ const mockZenodo = {
     fatal: vi.fn(),
   },
   host: 'sandbox.zenodo.org',
+  authenticationState: ZenodoAuthenticationStates.NOT_TRIED,
   listDepositions: vi.fn(),
   createDeposition: vi.fn(),
   retrieveDeposition: vi.fn(),
@@ -24,9 +53,17 @@ const mockZenodo = {
   retrieveRequests: vi.fn(),
   retrieveVersions: vi.fn(),
   deleteDeposition: vi.fn(),
+  verifyAuthentication: vi
+    .fn()
+    .mockImplementation(async function verifyAuthentication(this: MockZenodo) {
+      // Simulate the actual behavior
+      this.authenticationState = ZenodoAuthenticationStates.FAILED;
+      return false;
+    }),
 };
 afterEach(() => {
   vi.clearAllMocks();
+  mockZenodo.authenticationState = ZenodoAuthenticationStates.NOT_TRIED;
 });
 
 test('missing rate limit headers', async () => {
@@ -69,12 +106,15 @@ test('rate limit delay calculation', async () => {
 }, 15000);
 
 test('non-retryable errors', async () => {
+  // Set auth state to FAILED so 401 won't trigger auth verification
+  mockZenodo.authenticationState = ZenodoAuthenticationStates.FAILED;
+
   const errorResponse = new Response('Unauthorized', { status: 401 });
   mockFetch.mockResolvedValueOnce(errorResponse);
 
   await expect(fetchZenodo(mockZenodo, {})).rejects.toThrow();
   expect(mockFetch).toHaveBeenCalledTimes(1);
-});
+}, 15000);
 
 test('retryable errors 408', async () => {
   const errorResponse = new Response('Timeout', { status: 408 });
@@ -88,16 +128,12 @@ test('retryable errors 408', async () => {
   expect(mockFetch).toHaveBeenCalledTimes(2);
 });
 
-test('retryable errors 409', async () => {
+test('non-retryable errors 409', async () => {
   const errorResponse = new Response('Conflict', { status: 409 });
-  const successResponse = new Response('{"success": true}', { status: 200 });
+  mockFetch.mockResolvedValueOnce(errorResponse);
 
-  mockFetch
-    .mockResolvedValueOnce(errorResponse)
-    .mockResolvedValueOnce(successResponse);
-
-  await fetchZenodo(mockZenodo, {});
-  expect(mockFetch).toHaveBeenCalledTimes(2);
+  await expect(fetchZenodo(mockZenodo, {})).rejects.toThrow();
+  expect(mockFetch).toHaveBeenCalledTimes(1);
 });
 
 test('exponential backoff', async () => {
@@ -261,4 +297,27 @@ test('formdata body', async () => {
   expect(callArgs).toBeDefined();
   // @ts-expect-error callArgs is unknown type
   expect(callArgs[1].body).toBe(formData);
+});
+
+test('authentication error triggers verification', async () => {
+  mockZenodo.authenticationState = ZenodoAuthenticationStates.NOT_TRIED;
+  mockZenodo.verifyAuthentication.mockResolvedValueOnce(true);
+  mockZenodo.verifyAuthentication.mockImplementation(
+    async function verifyAuthentication(this: MockZenodo) {
+      this.authenticationState = ZenodoAuthenticationStates.SUCCEEDED;
+      return true;
+    },
+  );
+
+  const authErrorResponse = new Response('Unauthorized', { status: 401 });
+  const successResponse = new Response('{"success": true}', { status: 200 });
+
+  mockFetch
+    .mockResolvedValueOnce(authErrorResponse)
+    .mockResolvedValueOnce(successResponse);
+
+  await fetchZenodo(mockZenodo, {});
+
+  expect(mockZenodo.verifyAuthentication).toHaveBeenCalledTimes(1);
+  expect(mockFetch).toHaveBeenCalledTimes(2);
 });

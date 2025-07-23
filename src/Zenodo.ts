@@ -1,5 +1,7 @@
 import type { Logger } from 'cheminfo-types';
 
+import { ZenodoAuthenticationStates } from './ZenodoAuthenticationStates.ts';
+import type { ZenodoAuthenticationStatesType } from './ZenodoAuthenticationStates.ts';
 import { Deposition } from './depositions/Deposition.ts';
 import type { ListDepositionsOptions } from './depositions/ListDepositionsOptions.ts';
 import { Record } from './depositions/Record.ts';
@@ -12,11 +14,13 @@ interface ZenodoOptions {
   host?: string;
   logger?: Logger;
 }
+
 export class Zenodo {
   host: string;
   accessToken: string;
   baseURL: string;
   logger?: Logger;
+  authenticationState: ZenodoAuthenticationStatesType;
 
   constructor(options: ZenodoOptions) {
     const { accessToken, host = 'sandbox.zenodo.org', logger } = options;
@@ -24,6 +28,7 @@ export class Zenodo {
     this.baseURL = `https://${host}/api/`;
     this.logger = logger;
     this.accessToken = accessToken;
+    this.authenticationState = ZenodoAuthenticationStates.NOT_TRIED;
   }
 
   static async create(options: ZenodoOptions): Promise<Zenodo> {
@@ -36,7 +41,48 @@ export class Zenodo {
       throw new Error(`Failed to authenticate: ${response.statusText}`);
     }
     zenodo.logger?.info('Authenticated successfully');
+    zenodo.authenticationState = ZenodoAuthenticationStates.SUCCEEDED;
     return zenodo;
+  }
+
+  /**
+   * Verify the authentication state of the Zenodo instance.
+   * This method checks if the access token is valid by making a request to the Zenodo API.
+   * @returns true if authentication is successful, false otherwise.
+   */
+  async verifyAuthentication(): Promise<boolean> {
+    const url = `${this.baseURL}deposit/depositions`;
+    const headers = new Headers();
+
+    if (this.accessToken) {
+      headers.set('Authorization', `Bearer ${this.accessToken}`);
+    }
+
+    // can't use fetchZenodo to avoid circular dependency
+    try {
+      const response = await fetch(url, {
+        method: 'GET',
+        headers,
+      });
+
+      if (response.status === 200) {
+        this.authenticationState = ZenodoAuthenticationStates.SUCCEEDED;
+        this.logger?.info('Authentication verified successfully');
+        return true;
+      } else {
+        this.authenticationState = ZenodoAuthenticationStates.FAILED;
+        this.logger?.warn(
+          `Authentication failed with status ${response.status}`,
+        );
+        return false;
+      }
+    } catch (error) {
+      this.authenticationState = ZenodoAuthenticationStates.FAILED;
+      this.logger?.error(
+        `Authentication verification failed: ${String(error)}`,
+      );
+      return false;
+    }
   }
 
   async listDepositions(
