@@ -31,6 +31,13 @@ export class Zenodo {
     this.authenticationState = ZenodoAuthenticationStates.NOT_TRIED;
   }
 
+  /**
+   * Create a new Zenodo instance.
+   * This method authenticates the user and initializes a new Zenodo instance.
+   * @param options - the options for creating a Zenodo instance
+   * @throws {Error} If the authentication fails
+   * @returns a new Zenodo instance
+   */
   static async create(options: ZenodoOptions): Promise<Zenodo> {
     const zenodo = new Zenodo(options);
     const response = await fetchZenodo(zenodo, {
@@ -85,6 +92,11 @@ export class Zenodo {
     }
   }
 
+  /**
+   * List all depositions
+   * @param options - options for listing depositions
+   * @returns an array of deposition objects
+   */
   async listDepositions(
     options: ListDepositionsOptions = {},
   ): Promise<Deposition[]> {
@@ -109,6 +121,13 @@ export class Zenodo {
     );
   }
 
+  /**
+   * Create a new deposition
+   * @param metadata - the metadata for the new deposition
+   * @throws {Error} If the metadata is invalid or the request fails
+   * @description Creates a new deposition with the provided metadata.
+   * @returns The created deposition object
+   */
   async createDeposition(metadata: ZenodoMetadata): Promise<Deposition> {
     const response = await fetchZenodo(this, {
       route: 'deposit/depositions',
@@ -121,6 +140,12 @@ export class Zenodo {
     return deposition;
   }
 
+  /**
+   * Retrieve a deposition by its ID
+   * @param id - the deposition id
+   * @throws {Error} If the deposition does not exist or the ID is undefined
+   * @returns The retrieved deposition object
+   */
   async retrieveDeposition(id: number): Promise<Deposition> {
     const response = await fetchZenodo(this, {
       route: `deposit/depositions/${id}`,
@@ -134,7 +159,7 @@ export class Zenodo {
    * Retrieve a public deposition record
    * @param id - the deposition id
    * @throws {Error} If the deposition does not exist or the ID is undefined
-   * @returns - The public deposition record
+   * @returns The public deposition record
    */
   async retrieveRecord(id: number): Promise<Record> {
     const response = await fetchZenodo(this, {
@@ -145,6 +170,11 @@ export class Zenodo {
     return new Record(this, deposition);
   }
 
+  /**
+   * List files in a deposition
+   * @param depositionId - the deposition id to retrieve requests for
+   * @returns An object containing the total number of requests and the list of requests
+   */
   async retrieveRequests(
     depositionId?: number,
   ): Promise<{ hits: { total: number; hits: ZenodoReview[] } }> {
@@ -182,6 +212,11 @@ export class Zenodo {
     return versions?.hits.hits || [];
   }
 
+  /**
+   * Deletes a deposition.
+   * @param id - the deposition id
+   * @throws {Error} If the deposition does not exist or the ID is undefined
+   */
   async deleteDeposition(id: number): Promise<void> {
     await fetchZenodo(this, {
       method: 'DELETE',

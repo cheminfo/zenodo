@@ -462,7 +462,7 @@ test.todo('publish deposition', async () => {
   expect(latestVersion).toBeDefined();
 });
 
-test.skip('submit for review', async () => {
+test.todo('submit for review', async () => {
   const logger = new FifoLogger();
   const zenodo = new Zenodo({
     host: 'sandbox.zenodo.org',
