@@ -1,4 +1,5 @@
 import type { Zenodo } from './Zenodo.ts';
+import { ZenodoAuthenticationStates } from './ZenodoAuthenticationStates.ts';
 import { responseStatuses } from './responseStatuses.ts';
 
 interface FetchZenodoOptions {
@@ -84,24 +85,50 @@ function calculateRateLimitDelay(rateLimitInfo: RateLimitInfo): number {
     return 0;
   }
 
-  // If no requests remaining, wait until reset time
   const now = Math.floor(Date.now() / 1000);
   const waitTime = Math.max(0, rateLimitInfo.reset - now);
 
-  // Add a small buffer to ensure the rate limit has actually reset
   return (waitTime + 1) * 1000;
 }
 
 /**
  * Determine if an error is retryable based on status code.
  * @param status - The HTTP status code of the response.
+ * @param zenodo - The Zenodo instance
  * @returns True if the error is retryable, false otherwise.
  */
-function isRetryableError(status: number): boolean {
-  // Retry on rate limit (429), server errors (5xx), and some specific client errors
-  // 404 (Not Found) is NOT retryable - the resource doesn't exist
-  // 401 (Unauthorized) and 403 (Forbidden) are NOT retryable - auth issues
-  return status === 429 || status >= 500 || status === 408 || status === 409;
+async function shouldRetry(status: number, zenodo: Zenodo): Promise<boolean> {
+  if (status === 429 || (status >= 500 && status < 600) || status === 408) {
+    zenodo.logger?.debug(`Retrying status ${status} - server/rate limit error`);
+    return true;
+  }
+
+  const isAuthError =
+    (status === 401 || status === 403) &&
+    (zenodo.authenticationState === ZenodoAuthenticationStates.NOT_TRIED ||
+      zenodo.authenticationState === ZenodoAuthenticationStates.SUCCEEDED);
+
+  if (isAuthError) {
+    zenodo.logger?.debug(
+      `Auth error detected (${status}), current state: ${zenodo.authenticationState}`,
+    );
+    zenodo.logger?.debug('Attempting to verify authentication...');
+
+    try {
+      await zenodo.verifyAuthentication();
+      zenodo.logger?.debug(
+        `Authentication verification completed, new state: ${zenodo.authenticationState}`,
+      );
+      return true;
+    } catch (error) {
+      zenodo.logger?.error(
+        `Authentication verification failed: ${error instanceof Error ? error.message : String(error)}`,
+      );
+      return false;
+    }
+  }
+
+  return false;
 }
 
 /**
@@ -192,18 +219,18 @@ async function performFetchAttempt(
  * @param body - The request body
  * @returns Error to throw
  */
-function handleFailedResponse(
+async function handleFailedResponse(
   zenodo: Zenodo,
   response: Response,
   url: string,
   method: string,
   contentType: string | undefined,
   body: string | FormData | undefined,
-): Error {
+): Promise<Error> {
   const errorMessage =
     responseStatuses[response.status]?.description || response.statusText;
 
-  if (!isRetryableError(response.status)) {
+  if (!(await shouldRetry(response.status, zenodo))) {
     zenodo.logger?.error(
       `Non-retryable error fetching ${url} with ${method}: ${errorMessage}`,
     );
@@ -257,7 +284,6 @@ async function retryFetch(
       attempt,
     );
 
-    // If we got the expected status, return the response
     if (response.status === expectedStatus) {
       if (attempt > 0) {
         zenodo.logger?.info(`Request succeeded after ${attempt} retries`);
@@ -265,9 +291,8 @@ async function retryFetch(
       return response;
     }
 
-    // Check if this is a retryable error
-    if (!isRetryableError(response.status)) {
-      throw handleFailedResponse(
+    if (!(await shouldRetry(response.status, zenodo))) {
+      throw await handleFailedResponse(
         zenodo,
         response,
         url,
@@ -277,9 +302,8 @@ async function retryFetch(
       );
     }
 
-    // If we've exhausted retries, throw the error
     if (attempt >= maxRetries) {
-      throw handleFailedResponse(
+      throw await handleFailedResponse(
         zenodo,
         response,
         url,
@@ -289,7 +313,6 @@ async function retryFetch(
       );
     }
 
-    // Calculate delay and log warning
     const rateLimitInfo = extractRateLimitInfo(response);
     const delay = calculateRetryDelay(
       attempt,
@@ -312,7 +335,6 @@ async function retryFetch(
       );
     }
 
-    // Wait and retry recursively
     await sleep(delay);
     return await retryFetch(
       zenodo,
@@ -331,7 +353,6 @@ async function retryFetch(
         throw error;
       }
 
-      // Network errors are usually retryable
       if (attempt >= maxRetries) {
         zenodo.logger?.error(
           `All ${maxRetries + 1} attempts failed for ${method} ${url}`,
