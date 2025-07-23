@@ -21,7 +21,7 @@ export class Deposition {
    * This method creates a new file in the deposition. If the file is already it will first
    * delete the existing file and then create a new one.
    * @param file - the file to create in the deposition
-   * @returns ZenodoFile - the created file object
+   * @returns the created file object
    */
   async createFile(file: File): Promise<ZenodoFile> {
     const createdFile = await this.createFiles([file]);
@@ -36,7 +36,7 @@ export class Deposition {
    * multiple times with delays in between until all files are successfully created or
    * the maximum number of attempts is reached.
    * @param filesAndNames - an array of File objects to be created in the deposition
-   * @returns ZenodoFile[] - an array of the created ZenodoFile objects
+   * @returns an array of the created ZenodoFile objects
    */
   async createFiles(filesAndNames: File[]): Promise<ZenodoFile[]> {
     const promises = filesAndNames.map((file) => this.uploadFile(file));
@@ -47,7 +47,7 @@ export class Deposition {
    * Creates a zip file from multiple files and uploads it to the deposition.
    * @param filesAndNames - an array of File objects to be created in the deposition
    * @param zipName - the name of the zip file to be created
-   * @returns ZenodoFile[] - an array of the created ZenodoFile objects
+   * @returns an array of the created ZenodoFile objects
    */
   async createFilesAsZip(
     filesAndNames: File[],
@@ -59,7 +59,7 @@ export class Deposition {
 
   /**
    * List all files in the deposition
-   * @returns ZenodoFile[] - an array of ZenodoFile objects
+   * @returns an array of ZenodoFile objects
    */
   async listFiles(): Promise<ZenodoFile[]> {
     const response = await fetchZenodo(this.zenodo, {
@@ -103,7 +103,7 @@ export class Deposition {
   /**
    * Retrieve a file from the deposition
    * @param id - the ID or the name of the file to retrieve
-   * @returns ZenodoFile - the file object
+   * @returns the file object
    */
   async retrieveFile(id: string): Promise<ZenodoFile> {
     const response = await fetchZenodo(this.zenodo, {
@@ -119,7 +119,7 @@ export class Deposition {
   /**
    * Update the metadata of the deposition
    * @param metadata - the new metadata to update the deposition with
-   * @returns Deposition - the updated deposition object
+   * @returns the updated deposition object
    */
   async update(metadata: ZenodoMetadata): Promise<Deposition> {
     const response = await fetchZenodo(this.zenodo, {
@@ -135,7 +135,7 @@ export class Deposition {
   /**
    * Publish the deposition. This will make it publicly available.
    * !!! Note that the deposition cannot be deleted after it is published.
-   * @returns Deposition - the updated deposition object after publishing
+   * @returns the updated deposition object after publishing
    */
   async publish(): Promise<Deposition> {
     const response = await fetchZenodo(this.zenodo, {
@@ -152,7 +152,7 @@ export class Deposition {
    * Creates a new version of a published deposition.
    * This is useful for updating the deposition with new files or metadata.
    * The new version will have a new ID and will not overwrite the existing deposition.
-   * @returns Deposition - a new deposition object that is a new version of the current deposition
+   * @returns a new deposition object that is a new version of the current deposition
    */
   async newVersion(): Promise<Deposition> {
     const response = await fetchZenodo(this.zenodo, {
@@ -179,7 +179,7 @@ export class Deposition {
   /**
    * Upload a file to the deposition
    * @param file - the file to upload to the deposition
-   * @returns ZenodoFile - the created file object
+   * @returns the created file object
    */
   async uploadFile(file: File): Promise<ZenodoFile> {
     const formData = new FormData();
@@ -249,9 +249,9 @@ export class Deposition {
 
   /**
    * Adds the deposition to a community.
-   * @param communityId - the ID of the community to add the deposition to
    * This method adds the deposition to a community by creating a review request.
-   * @returns response - the response from the Zenodo API
+   * @param communityId - the ID of the community to add the deposition to
+   * @returns the response from the Zenodo API
    */
   async addToCommunity(communityId: string): Promise<unknown> {
     const body = JSON.stringify({
