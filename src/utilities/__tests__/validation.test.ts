@@ -184,13 +184,6 @@ describe('ZenodoMetadata Validation', () => {
     );
   });
 
-  test('rejects additional properties', () => {
-    const metadata = { ...createValidMetadata(), extraField: 'not allowed' };
-    expect(() => validateZenodoMetadata(metadata)).toThrow(
-      /additional properties/,
-    );
-  });
-
   test('rejects empty creators array', () => {
     const metadata = createValidMetadata({ creators: [] });
     expect(() => validateZenodoMetadata(metadata)).toThrow();

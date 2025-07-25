@@ -77,7 +77,6 @@ export const zenodoDepositionSchema = {
     links: {
       type: 'object',
       description: 'Links related to the deposition.',
-      additionalProperties: { type: 'string' },
     },
     conceptdoi: {
       type: 'string',

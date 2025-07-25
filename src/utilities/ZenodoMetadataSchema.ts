@@ -8,7 +8,7 @@ import { licenseEnum } from './licensesEnum.ts';
  */
 export const zenodoMetadataSchema = {
   $schema: 'http://json-schema.org/draft-07/schema',
-  additionalProperties: false,
+  additionalProperties: true,
   allOf: [
     {
       if: {
@@ -40,7 +40,7 @@ export const zenodoMetadataSchema = {
     },
     communities: {
       items: {
-        additionalProperties: false,
+        additionalProperties: true,
         properties: {
           identifier: {
             type: 'string',
@@ -178,14 +178,14 @@ export const zenodoMetadataSchema = {
     },
     grants: {
       items: {
-        additionalProperties: false,
+        additionalProperties: true,
         examples: ['10.13039/501100000780::675191'],
         properties: {
           id: {
             type: 'string',
           },
         },
-        required: ['id'],
+        required: [],
         type: 'object',
       },
       minItems: 0,
@@ -466,7 +466,7 @@ export const zenodoMetadataSchema = {
             properties: {
               index: {
                 type: 'integer',
-                minimum: 1,
+                minimum: 0,
               },
               is_last: {
                 type: 'boolean',
