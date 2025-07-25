@@ -30,9 +30,11 @@ test('no token', async ({ expect }) => {
   const zenodo = new Zenodo({
     host: 'zenodo.org',
   });
-  const publicDepositions = await zenodo.retrieveRecord(publicDepositionId);
-  expect(publicDepositions.value.id).toBe(publicDepositionId);
-  await expect(publicDepositions.getDeposition()).rejects.toThrow(
+  const publicDeposition = await zenodo.retrieveRecord(publicDepositionId, {
+    isPublished: true,
+  });
+  expect(publicDeposition.value.id).toBe(publicDepositionId);
+  await expect(publicDeposition.getDeposition()).rejects.toThrow(
     'Access token is required to retrieve a deposition',
   );
 });
