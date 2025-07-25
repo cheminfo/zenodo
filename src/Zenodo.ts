@@ -15,6 +15,10 @@ interface ZenodoOptions {
   logger?: Logger;
 }
 
+interface PublicRecordOptions {
+  isPublished?: boolean;
+}
+
 export class Zenodo {
   host: string;
   accessToken: string;
@@ -158,12 +162,19 @@ export class Zenodo {
   /**
    * Retrieve a public deposition record
    * @param id - the deposition id
+   * @param isPublished - whether the deposition is published or not
+   * @param options
    * @throws {Error} If the deposition does not exist or the ID is undefined
    * @returns The public deposition record
    */
-  async retrieveRecord(id: number): Promise<Record> {
+  async retrieveRecord(
+    id: number,
+    options: PublicRecordOptions = {},
+  ): Promise<Record> {
+    const { isPublished = false } = options;
+    const route = isPublished ? `records/${id}` : `records/${id}/draft`;
     const response = await fetchZenodo(this, {
-      route: `records/${id}`,
+      route,
     });
     const deposition = await response.json();
     this.logger?.info(`Retrieved public deposition ${id}`);
