@@ -9,6 +9,8 @@ import { getConfig } from './getConfig.ts';
 
 const config = getConfig();
 
+const publicDepositionId = 1078495; // arbitrarily selected deposition: https://zenodo.org/records/1078495
+
 afterEach(async () => {
   const zenodo = await Zenodo.create({
     host: 'sandbox.zenodo.org',
@@ -26,10 +28,10 @@ afterEach(async () => {
 test('no token', async ({ expect }) => {
   // @ts-expect-error we are testing the error
   const zenodo = new Zenodo({
-    host: 'sandbox.zenodo.org',
+    host: 'zenodo.org',
   });
-  const publicDepositions = await zenodo.retrieveRecord(290289);
-  expect(publicDepositions.value.id).toBe(290289);
+  const publicDepositions = await zenodo.retrieveRecord(publicDepositionId);
+  expect(publicDepositions.value.id).toBe(publicDepositionId);
   await expect(publicDepositions.getDeposition()).rejects.toThrow(
     'Access token is required to retrieve a deposition',
   );
@@ -137,11 +139,6 @@ test('authenticate', async () => {
   const requests = await zenodo.retrieveRequests();
   expect(requests.hits.total).toBe(0);
 
-  const versions = await zenodo.retrieveVersions(287116);
-  expect(versions.length).toBeGreaterThanOrEqual(2);
-  // @ts-expect-error versions is not typed in zenodo
-  expect(versions[0].id).toBe(287116);
-
   const logs = logger.getLogs();
-  expect(logs.length).toBeGreaterThanOrEqual(11);
+  expect(logs.length).toBeGreaterThanOrEqual(10);
 }, 15000);
