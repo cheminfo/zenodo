@@ -162,8 +162,7 @@ export class Zenodo {
   /**
    * Retrieve a public deposition record
    * @param id - the deposition id
-   * @param isPublished - whether the deposition is published or not
-   * @param options
+   * @param options - additional options for the request
    * @throws {Error} If the deposition does not exist or the ID is undefined
    * @returns The public deposition record
    */
