@@ -97,6 +97,32 @@ export class Zenodo {
   }
 
   /**
+   * Lists all records in the Zenodo instance.
+   * @param options - options for listing records
+   * @description Lists all records in the Zenodo instance.
+   * @returns An array of Record objects representing the records in the Zenodo instance.
+   */
+  async listRecords(options: ListDepositionsOptions = {}): Promise<Record[]> {
+    // all the values must be string
+    const optionsWithStrings = Object.fromEntries(
+      Object.entries(options).map(([key, value]) => {
+        if (key === 'allVersions') {
+          return ['all_versions', String(value)];
+        }
+        return [key, String(value)];
+      }),
+    );
+
+    const response = await fetchZenodo(this, {
+      route: 'records',
+      searchParams: optionsWithStrings,
+    });
+    const records = (await response.json()) as unknown[];
+    this.logger?.info(`Listed ${records.length} records`);
+    return records.map((record: unknown) => new Record(this, record));
+  }
+
+  /**
    * List all depositions
    * @param options - options for listing depositions
    * @returns an array of deposition objects
@@ -123,6 +149,24 @@ export class Zenodo {
     return depositions.map(
       (deposition: unknown) => new Deposition(this, deposition),
     );
+  }
+
+  /**
+   * Creates a new record in the Zenodo instance.
+   * @param metadata - the metadata for the new record
+   * @throws {Error} If the metadata is invalid or the request fails
+   * @returns The created record object
+   */
+  async createRecord(metadata: ZenodoMetadata): Promise<Record> {
+    const response = await fetchZenodo(this, {
+      route: 'records',
+      expectedStatus: 201,
+      method: 'POST',
+      body: JSON.stringify({ metadata }),
+    });
+    const record = new Record(this, await response.json());
+    this.logger?.info(`Created record ${record.value.id}`);
+    return record;
   }
 
   /**
