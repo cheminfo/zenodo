@@ -12,7 +12,7 @@ export class ZenodoFile {
   }
 
   async getContentResponse() {
-    const link = this.value.links.download;
+    const link = this.value.links.content;
     const response = await fetch(link, {
       headers: {
         Authorization: `Bearer ${this.zenodo.accessToken}`,

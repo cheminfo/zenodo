@@ -1,7 +1,7 @@
+/* eslint-disable no-await-in-loop */
 import type { Zenodo, PublicRecordOptions } from '../Zenodo.ts';
 import { ZenodoFile } from '../ZenodoFile.ts';
 import { fetchZenodo } from '../fetchZenodo.ts';
-import { responseStatuses } from '../responseStatuses.ts';
 import type { ZenodoMetadata } from '../utilities/ZenodoMetadataSchema.ts';
 import type { ZenodoRecord } from '../utilities/ZenodoRecordSchema.ts';
 import type { ZenodoReview } from '../utilities/ZenodoReviewSchema.ts';

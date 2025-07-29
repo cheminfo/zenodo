@@ -247,53 +247,54 @@ async function handleFailedResponse(
 ): Promise<Error> {
   const baseErrorMessage =
     responseStatuses[response.status]?.description || response.statusText;
-
   let detailedErrorMessage = baseErrorMessage;
-  let errorDetails: any = null;
-
+  let errorDetails: unknown = null;
   try {
-    // Try to get the response body for more detailed error information
     const responseText = await response.text();
-
     if (responseText) {
       try {
-        // Try to parse as JSON first
         errorDetails = JSON.parse(responseText);
-
-        // Extract meaningful error message from common API response formats
-        if (errorDetails.message) {
-          detailedErrorMessage = `${baseErrorMessage}: ${errorDetails.message}`;
-        } else if (errorDetails.error) {
-          detailedErrorMessage = `${baseErrorMessage}: ${errorDetails.error}`;
-        } else if (errorDetails.errors && Array.isArray(errorDetails.errors)) {
-          const errorMessages = errorDetails.errors
-            .map((err: any) =>
-              typeof err === 'string'
-                ? err
-                : err.message || JSON.stringify(err),
-            )
-            .join(', ');
-          detailedErrorMessage = `${baseErrorMessage}: ${errorMessages}`;
-        } else if (typeof errorDetails === 'object') {
-          detailedErrorMessage = `${baseErrorMessage}: ${JSON.stringify(errorDetails)}`;
+        if (errorDetails && typeof errorDetails === 'object') {
+          const errorObj = errorDetails as Record<string, unknown>;
+          if (errorObj.message && typeof errorObj.message === 'string') {
+            detailedErrorMessage = `${baseErrorMessage}: ${errorObj.message}`;
+          } else if (errorObj.error && typeof errorObj.error === 'string') {
+            detailedErrorMessage = `${baseErrorMessage}: ${errorObj.error}`;
+          } else if (errorObj.errors && Array.isArray(errorObj.errors)) {
+            const errorMessages = errorObj.errors
+              .map((err: unknown) =>
+                typeof err === 'string'
+                  ? err
+                  : err &&
+                      typeof err === 'object' &&
+                      'message' in err &&
+                      typeof (err as Record<string, unknown>).message ===
+                        'string'
+                    ? ((err as Record<string, unknown>).message as string)
+                    : JSON.stringify(err),
+              )
+              .join(', ');
+            detailedErrorMessage = `${baseErrorMessage}: ${errorMessages}`;
+          } else {
+            detailedErrorMessage = `${baseErrorMessage}: ${JSON.stringify(errorDetails)}`;
+          }
         } else {
           detailedErrorMessage = `${baseErrorMessage}: ${responseText}`;
         }
-      } catch (jsonError) {
-        // If it's not JSON, use the raw text
+      } catch {
         detailedErrorMessage = `${baseErrorMessage}: ${responseText}`;
       }
     }
   } catch (textError) {
     // If we can't read the response body, log the attempt
-    zenodo.logger?.warn(`Could not read error response body: ${textError}`);
+    zenodo.logger?.warn(
+      `Could not read error response body: ${textError instanceof Error ? textError.message : String(textError)}`,
+    );
   }
-
   if (!(await shouldRetry(response.status, zenodo))) {
     zenodo.logger?.error(
       `Non-retryable error fetching ${url} with ${method}: ${detailedErrorMessage}`,
     );
-
     zenodo.logger?.error(
       {
         url,
@@ -306,7 +307,6 @@ async function handleFailedResponse(
       `Request details:`,
     );
   }
-
   const error = new Error(detailedErrorMessage, {
     cause: {
       url,
@@ -320,7 +320,6 @@ async function handleFailedResponse(
       errorDetails,
     },
   });
-
   return error;
 }
 

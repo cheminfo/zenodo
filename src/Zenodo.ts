@@ -2,10 +2,9 @@ import type { Logger } from 'cheminfo-types';
 
 import { ZenodoAuthenticationStates } from './ZenodoAuthenticationStates.ts';
 import type { ZenodoAuthenticationStatesType } from './ZenodoAuthenticationStates.ts';
-import { Deposition } from './depositions/Deposition.ts';
-import type { ListDepositionsOptions } from './depositions/ListDepositionsOptions.ts';
-import { Record } from './depositions/Record.ts';
 import { fetchZenodo } from './fetchZenodo.ts';
+import type { ListDepositionsOptions } from './records/ListDepositionsOptions.ts';
+import { Record } from './records/Record.ts';
 import type { ZenodoMetadata } from './utilities/ZenodoMetadataSchema.ts';
 import type { ZenodoReview } from './utilities/ZenodoReviewSchema.ts';
 
@@ -123,35 +122,6 @@ export class Zenodo {
   }
 
   /**
-   * List all depositions
-   * @param options - options for listing depositions
-   * @returns an array of deposition objects
-   */
-  async listDepositions(
-    options: ListDepositionsOptions = {},
-  ): Promise<Deposition[]> {
-    // all the values must be string
-    const optionsWithStrings = Object.fromEntries(
-      Object.entries(options).map(([key, value]) => {
-        if (key === 'allVersions') {
-          return ['all_versions', String(value)];
-        }
-        return [key, String(value)];
-      }),
-    );
-
-    const response = await fetchZenodo(this, {
-      route: 'deposit/depositions',
-      searchParams: optionsWithStrings,
-    });
-    const depositions = (await response.json()) as unknown[];
-    this.logger?.info(`Listed ${depositions.length} depositions`);
-    return depositions.map(
-      (deposition: unknown) => new Deposition(this, deposition),
-    );
-  }
-
-  /**
    * Creates a new record in the Zenodo instance.
    * @param metadata - the metadata for the new record
    * @throws {Error} If the metadata is invalid or the request fails
@@ -167,40 +137,6 @@ export class Zenodo {
     const record = new Record(this, await response.json());
     this.logger?.info(`Created record ${record.value.id}`);
     return record;
-  }
-
-  /**
-   * Create a new deposition
-   * @param metadata - the metadata for the new deposition
-   * @throws {Error} If the metadata is invalid or the request fails
-   * @description Creates a new deposition with the provided metadata.
-   * @returns The created deposition object
-   */
-  async createDeposition(metadata: ZenodoMetadata): Promise<Deposition> {
-    const response = await fetchZenodo(this, {
-      route: 'deposit/depositions',
-      expectedStatus: 201,
-      method: 'POST',
-      body: JSON.stringify({ metadata }),
-    });
-    const deposition = new Deposition(this, await response.json());
-    this.logger?.info(`Created deposition ${deposition.value.id}`);
-    return deposition;
-  }
-
-  /**
-   * Retrieve a deposition by its ID
-   * @param id - the deposition id
-   * @throws {Error} If the deposition does not exist or the ID is undefined
-   * @returns The retrieved deposition object
-   */
-  async retrieveDeposition(id: number): Promise<Deposition> {
-    const response = await fetchZenodo(this, {
-      route: `deposit/depositions/${id}`,
-    });
-    const deposition = await response.json();
-    this.logger?.info(`Retrieved deposition ${id}`);
-    return new Deposition(this, deposition);
   }
 
   /**
@@ -278,19 +214,5 @@ export class Zenodo {
       expectedStatus: 204,
     });
     this.logger?.info(`Deleted record ${id}`);
-  }
-
-  /**
-   * Deletes a deposition.
-   * @param id - the deposition id
-   * @throws {Error} If the deposition does not exist or the ID is undefined
-   */
-  async deleteDeposition(id: number): Promise<void> {
-    await fetchZenodo(this, {
-      method: 'DELETE',
-      route: `deposit/depositions/${id}`,
-      expectedStatus: 204,
-    });
-    this.logger?.info(`Deleted deposition ${id}`);
   }
 }

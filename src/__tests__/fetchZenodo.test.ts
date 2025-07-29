@@ -22,13 +22,12 @@ interface MockZenodo {
   logger: MockLogger;
   host: string;
   authenticationState: ZenodoAuthenticationStatesType;
-  listDepositions: ReturnType<typeof vi.fn>;
-  createDeposition: ReturnType<typeof vi.fn>;
-  retrieveDeposition: ReturnType<typeof vi.fn>;
+  listRecords: ReturnType<typeof vi.fn>;
+  createRecord: ReturnType<typeof vi.fn>;
   retrieveRecord: ReturnType<typeof vi.fn>;
   retrieveRequests: ReturnType<typeof vi.fn>;
   retrieveVersions: ReturnType<typeof vi.fn>;
-  deleteDeposition: ReturnType<typeof vi.fn>;
+  deleteRecord: ReturnType<typeof vi.fn>;
   verifyAuthentication: ReturnType<typeof vi.fn>;
 }
 
@@ -46,13 +45,12 @@ const mockZenodo: MockZenodo = {
   },
   host: 'sandbox.zenodo.org',
   authenticationState: ZenodoAuthenticationStates.NOT_TRIED,
-  listDepositions: vi.fn(),
-  createDeposition: vi.fn(),
-  retrieveDeposition: vi.fn(),
+  listRecords: vi.fn(),
+  createRecord: vi.fn(),
   retrieveRecord: vi.fn(),
   retrieveRequests: vi.fn(),
   retrieveVersions: vi.fn(),
-  deleteDeposition: vi.fn(),
+  deleteRecord: vi.fn(),
   verifyAuthentication: vi
     .fn()
     .mockImplementation(async function verifyAuthentication(this: MockZenodo) {

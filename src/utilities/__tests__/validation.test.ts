@@ -74,14 +74,31 @@ const createValidRecord = (
 const createValidFile = (
   overrides: Partial<ZenodoFileType> = {},
 ): ZenodoFileType => ({
-  id: 'file-123',
-  filename: 'test.csv',
-  filesize: 1024,
-  checksum: 'abc123',
-  links: {
-    self: 'https://sandbox.zenodo.org/api/files/file-123',
-    download: 'https://sandbox.zenodo.org/api/files/file-123/test.csv',
+  created: '2025-07-29T07:58:43.502424+00:00',
+  updated: '2025-07-29T07:58:43.795845+00:00',
+  mimetype: 'application/json',
+  version_id: 'c441538c-6a6d-4539-a21c-3c49579fca7b',
+  file_id: '30a98b92-2d07-487c-af4a-92a1d6d2b197',
+  bucket_id: 'c3d7758f-0651-4151-ad5e-7c30d9ff59eb',
+  metadata: {},
+  access: {
+    hidden: false,
   },
+  links: {
+    self: 'https://inveniordm.web.cern.ch/api/records/yp9xr-h0g40/draft/files/index.json',
+    content:
+      'https://inveniordm.web.cern.ch/api/records/yp9xr-h0g40/draft/files/index.json/content',
+    commit:
+      'https://inveniordm.web.cern.ch/api/records/yp9xr-h0g40/draft/files/index.json/commit',
+  },
+  key: 'index.json',
+  size: 9492,
+  transfer: {
+    type: 'L',
+  },
+  status: 'completed',
+  checksum: 'md5:aa21ce24f193cfca97cfd15ed63d32bd',
+  storage_class: 'L',
   ...overrides,
 });
 
@@ -262,20 +279,6 @@ describe('ZenodoRecord Validation', () => {
 describe('ZenodoFile Validation', () => {
   test('validates correct file', () => {
     const file = createValidFile();
-    expect(() => validateZenodoFile(file)).not.toThrow();
-  });
-
-  test('validates file with all optional fields', () => {
-    const file = createValidFile({
-      id: 'file-123',
-      filename: 'test.csv',
-      filesize: 1024,
-      checksum: 'abc123',
-      links: {
-        self: 'https://sandbox.zenodo.org/api/files/file-123',
-        download: 'https://sandbox.zenodo.org/api/files/file-123/test.csv',
-      },
-    });
     expect(() => validateZenodoFile(file)).not.toThrow();
   });
 

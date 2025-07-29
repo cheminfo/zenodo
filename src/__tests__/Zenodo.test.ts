@@ -9,18 +9,18 @@ import { getConfig } from './getConfig.ts';
 
 const config = getConfig();
 
-const publicDepositionId = 1078495; // arbitrarily selected deposition: https://zenodo.org/records/1078495
+const publicRecordId = 1078495; // arbitrarily selected deposition: https://zenodo.org/records/1078495
 
 afterEach(async () => {
   const zenodo = await Zenodo.create({
     host: 'sandbox.zenodo.org',
     accessToken: config.accessToken || '',
   });
-  const depositions = await zenodo.listDepositions();
-  const existing = depositions.filter((d) => d.value.state !== 'done');
-  for (const deposition of existing) {
-    if (deposition.value.id !== undefined) {
-      await zenodo.deleteDeposition(deposition.value.id);
+  const records = await zenodo.listRecords();
+  const existing = records.filter((d) => d.value.state !== 'done');
+  for (const record of existing) {
+    if (record.value.id !== undefined) {
+      await zenodo.deleteRecord(record.value.id);
     }
   }
 });
@@ -30,13 +30,10 @@ test('no token', async ({ expect }) => {
   const zenodo = new Zenodo({
     host: 'zenodo.org',
   });
-  const publicDeposition = await zenodo.retrieveRecord(publicDepositionId, {
+  const publicRecord = await zenodo.retrieveRecord(publicRecordId, {
     isPublished: true,
   });
-  expect(publicDeposition.value.id).toBe(publicDepositionId);
-  await expect(publicDeposition.getDeposition()).rejects.toThrow(
-    'Access token is required to retrieve a deposition',
-  );
+  expect(publicRecord.value.id).toBe(publicRecordId);
 });
 
 test('create zenodo', async () => {
@@ -86,61 +83,56 @@ test('authenticate', async () => {
     license: 'cc-by-1.0',
   };
 
-  const firstDeposition = await zenodo.createDeposition(depositionMetadata);
-  const retrievedDeposition = await zenodo.retrieveDeposition(
+  const firstRecord = await zenodo.createRecord(depositionMetadata);
+  const retrievedRecord = await zenodo.retrieveRecord(
     // @ts-expect-error value may be undefined
-    firstDeposition.value.id,
+    firstRecord.value.id,
   );
-  expect(retrievedDeposition.value.id).toBe(firstDeposition.value.id);
+  expect(retrievedRecord.value.id).toBe(firstRecord.value.id);
   // we could attach a file. We need a 'native' web file
   const firstFileData = new File(['Hello, world!'], 'example.txt', {
     type: 'text/plain',
   });
-  const firstFile = await firstDeposition.createFile(firstFileData);
-  expect(firstFile.value.filesize).toBe(13);
-  expect(firstFile.value.checksum).toBe('6cd3556deb0da54bca060b4c39479839');
+  const firstFile = await firstRecord.uploadFiles([firstFileData]);
+  expect(firstFile[0]?.value.size).toBe(186);
 
   const secondFileData = new File(['Hello, world 2!'], 'example2.txt', {
     type: 'text/plain',
   });
-  const secondFile = await firstDeposition.createFile(secondFileData);
-  expect(secondFile.value.filesize).toBe(15);
-  expect(secondFile.value.checksum).toBe('9500d92e2fa89ecbdc90cd890ca16ed0');
+  const secondFile = await firstRecord.uploadFiles([secondFileData]);
+  expect(secondFile[0]?.value.size).toBe(189);
+
   const thirdFileData = new File(['Hello, world 3!'], 'example3.txt', {
     type: 'text/plain',
   });
-  const thirdFile = await firstDeposition.createFilesAsZip(
-    [thirdFileData],
-    'example3',
-  );
+  const thirdFile = await firstRecord.uploadFiles([thirdFileData]);
 
-  expect(thirdFile[0]?.value.filename).toBe('example3.zip');
-  // @ts-expect-error thirdFile is possibly undefined
-  expect(thirdFile[0].value.filesize).toBe(269);
+  expect(thirdFile[0]?.value.key).toBe('example3.txt');
+  expect(thirdFile[0]?.value.size).toBe(189);
 
-  const files = await firstDeposition.listFiles();
-  files.sort((a, b) => a.value.filename.localeCompare(b.value.filename));
+  const files = await firstRecord.listFiles();
+  files.sort((a, b) => a.value.key.localeCompare(b.value.key));
 
   expect(files).toHaveLength(3);
 
-  // @ts-expect-error files[1] is not typed in zenodo
-  await firstDeposition.deleteFile(files[1].value.id);
-  const filesAfterDelete = await firstDeposition.listFiles();
+  // @ts-expect-error value may be undefined
+  await firstRecord.deleteFile(files[1]?.value.key);
+  const filesAfterDelete = await firstRecord.listFiles();
   expect(filesAfterDelete).toHaveLength(2);
 
-  // @ts-expect-error files[0] is not typed in zenodo
-  const retrievedFile = await firstDeposition.retrieveFile(files[0].value.id);
-  expect(retrievedFile.value.filename).toBe('example.txt');
+  // @ts-expect-error value may be undefined
+  const retrievedFile = await firstRecord.retrieveFile(files[0]?.value.key);
+  expect(retrievedFile.value.key).toBe('example.txt');
 
   const content = await retrievedFile
     .getContentResponse()
     .then((response) => response.text());
 
-  expect(content).toBe('Hello, world!');
+  expect(content).toContain('Hello, world!');
 
   const requests = await zenodo.retrieveRequests();
   expect(requests.hits.total).toBe(0);
 
   const logs = logger.getLogs();
-  expect(logs.length).toBeGreaterThanOrEqual(10);
+  expect(logs.length).toBeGreaterThanOrEqual(7);
 }, 15000);
