@@ -15,7 +15,7 @@ interface ZenodoOptions {
   logger?: Logger;
 }
 
-interface PublicRecordOptions {
+export interface PublicRecordOptions {
   isPublished?: boolean;
 }
 
@@ -114,12 +114,12 @@ export class Zenodo {
     );
 
     const response = await fetchZenodo(this, {
-      route: 'records',
+      route: 'user/records',
       searchParams: optionsWithStrings,
     });
-    const records = (await response.json()) as unknown[];
-    this.logger?.info(`Listed ${records.length} records`);
-    return records.map((record: unknown) => new Record(this, record));
+    const records = (await response.json()) as { hits: { hits: unknown[] } };
+    this.logger?.info(`Listed ${records.hits.hits.length} records`);
+    return records.hits.hits.map((record: unknown) => new Record(this, record));
   }
 
   /**
@@ -264,6 +264,20 @@ export class Zenodo {
     );
 
     return versions?.hits.hits || [];
+  }
+
+  async deleteRecord(
+    id: number,
+    options: PublicRecordOptions = {},
+  ): Promise<void> {
+    const { isPublished = false } = options;
+    const route = isPublished ? `records/${id}` : `records/${id}/draft`;
+    await fetchZenodo(this, {
+      method: 'DELETE',
+      route,
+      expectedStatus: 204,
+    });
+    this.logger?.info(`Deleted record ${id}`);
   }
 
   /**
