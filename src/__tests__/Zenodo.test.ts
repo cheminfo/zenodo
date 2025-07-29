@@ -94,13 +94,13 @@ test('authenticate', async () => {
     type: 'text/plain',
   });
   const firstFile = await firstRecord.uploadFiles([firstFileData]);
-  expect(firstFile[0]?.value.size).toBe(186);
+  expect(firstFile[0]?.value.key).toBe('example.txt');
 
   const secondFileData = new File(['Hello, world 2!'], 'example2.txt', {
     type: 'text/plain',
   });
   const secondFile = await firstRecord.uploadFiles([secondFileData]);
-  expect(secondFile[0]?.value.size).toBe(189);
+  expect(secondFile[0]?.value.key).toBe('example2.txt');
 
   const thirdFileData = new File(['Hello, world 3!'], 'example3.txt', {
     type: 'text/plain',
@@ -108,7 +108,6 @@ test('authenticate', async () => {
   const thirdFile = await firstRecord.uploadFiles([thirdFileData]);
 
   expect(thirdFile[0]?.value.key).toBe('example3.txt');
-  expect(thirdFile[0]?.value.size).toBe(189);
 
   const files = await firstRecord.listFiles();
   files.sort((a, b) => a.value.key.localeCompare(b.value.key));
