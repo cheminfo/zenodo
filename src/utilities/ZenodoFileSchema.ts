@@ -5,35 +5,100 @@ export const zenodoFileSchema = {
   title: 'Zenodo File',
   type: 'object',
   properties: {
-    id: {
+    created: {
+      type: 'string',
+      format: 'date-time',
+    },
+    updated: {
+      type: 'string',
+      format: 'date-time',
+    },
+    mimetype: {
       type: 'string',
     },
-    filename: {
+    version_id: {
       type: 'string',
     },
-    filesize: {
-      type: 'number',
-    },
-    checksum: {
+    file_id: {
       type: 'string',
+    },
+    bucket_id: {
+      type: 'string',
+    },
+    metadata: {
+      type: ['object', 'null'],
+    },
+    access: {
+      type: 'object',
+      properties: {
+        hidden: {
+          type: 'boolean',
+        },
+      },
+      required: ['hidden'],
+      additionalProperties: true,
     },
     links: {
       type: 'object',
       properties: {
-        download: {
-          type: 'string',
-          format: 'uri',
-        },
         self: {
           type: 'string',
           format: 'uri',
         },
+        content: {
+          type: 'string',
+          format: 'uri',
+        },
+        commit: {
+          type: 'string',
+          format: 'uri',
+        },
       },
-      required: ['download', 'self'],
+      required: ['self', 'content', 'commit'],
       additionalProperties: false,
     },
+    key: {
+      type: 'string',
+    },
+    transfer: {
+      type: 'object',
+      properties: {
+        type: {
+          type: 'string',
+        },
+      },
+      required: ['type'],
+      additionalProperties: true,
+    },
+    status: {
+      type: 'string',
+    },
+    checksum: {
+      type: 'string',
+    },
+    size: {
+      type: 'number',
+    },
+    storage_class: {
+      type: 'string',
+    },
   },
-  required: ['id', 'filename', 'filesize', 'checksum', 'links'],
+  required: [
+    'created',
+    'updated',
+    'mimetype',
+    'version_id',
+    'file_id',
+    'bucket_id',
+    'access',
+    'links',
+    'key',
+    'transfer',
+    'status',
+    'checksum',
+    'size',
+    'storage_class',
+  ],
   additionalProperties: false,
 } as const;
 
