@@ -196,17 +196,35 @@ async function performFetchAttempt(
     `Attempt ${attempt + 1} for ${requestOptions.method} ${url}`,
   );
 
-  const response = await fetch(url, requestOptions);
+  try {
+    const response = await fetch(url, requestOptions);
 
-  // Check rate limit headers
-  const rateLimitInfo = extractRateLimitInfo(response);
-  if (rateLimitInfo && zenodo.logger) {
-    zenodo.logger.debug(
-      `Rate limit status: ${rateLimitInfo.remaining}/${rateLimitInfo.limit} remaining, resets at ${rateLimitInfo.reset}`,
+    // Check rate limit headers
+    const rateLimitInfo = extractRateLimitInfo(response);
+    if (rateLimitInfo && zenodo.logger) {
+      zenodo.logger.debug(
+        `Rate limit status: ${rateLimitInfo.remaining}/${rateLimitInfo.limit} remaining, resets at ${rateLimitInfo.reset}`,
+      );
+    }
+
+    // Log response details for debugging
+    zenodo.logger?.debug(
+      `Response status: ${response.status} ${response.statusText}`,
     );
-  }
 
-  return response;
+    return response;
+  } catch (fetchError) {
+    zenodo.logger?.error(
+      {
+        url,
+        method: requestOptions.method,
+        error:
+          fetchError instanceof Error ? fetchError.message : String(fetchError),
+      },
+      `Network error on attempt ${attempt + 1}:`,
+    );
+    throw fetchError;
+  }
 }
 
 /**
@@ -227,18 +245,83 @@ async function handleFailedResponse(
   contentType: string | undefined,
   body: string | FormData | undefined,
 ): Promise<Error> {
-  const errorMessage =
+  const baseErrorMessage =
     responseStatuses[response.status]?.description || response.statusText;
+
+  let detailedErrorMessage = baseErrorMessage;
+  let errorDetails: any = null;
+
+  try {
+    // Try to get the response body for more detailed error information
+    const responseText = await response.text();
+
+    if (responseText) {
+      try {
+        // Try to parse as JSON first
+        errorDetails = JSON.parse(responseText);
+
+        // Extract meaningful error message from common API response formats
+        if (errorDetails.message) {
+          detailedErrorMessage = `${baseErrorMessage}: ${errorDetails.message}`;
+        } else if (errorDetails.error) {
+          detailedErrorMessage = `${baseErrorMessage}: ${errorDetails.error}`;
+        } else if (errorDetails.errors && Array.isArray(errorDetails.errors)) {
+          const errorMessages = errorDetails.errors
+            .map((err: any) =>
+              typeof err === 'string'
+                ? err
+                : err.message || JSON.stringify(err),
+            )
+            .join(', ');
+          detailedErrorMessage = `${baseErrorMessage}: ${errorMessages}`;
+        } else if (typeof errorDetails === 'object') {
+          detailedErrorMessage = `${baseErrorMessage}: ${JSON.stringify(errorDetails)}`;
+        } else {
+          detailedErrorMessage = `${baseErrorMessage}: ${responseText}`;
+        }
+      } catch (jsonError) {
+        // If it's not JSON, use the raw text
+        detailedErrorMessage = `${baseErrorMessage}: ${responseText}`;
+      }
+    }
+  } catch (textError) {
+    // If we can't read the response body, log the attempt
+    zenodo.logger?.warn(`Could not read error response body: ${textError}`);
+  }
 
   if (!(await shouldRetry(response.status, zenodo))) {
     zenodo.logger?.error(
-      `Non-retryable error fetching ${url} with ${method}: ${errorMessage}`,
+      `Non-retryable error fetching ${url} with ${method}: ${detailedErrorMessage}`,
+    );
+
+    zenodo.logger?.error(
+      {
+        url,
+        method,
+        contentType,
+        status: response.status,
+        headers: Object.fromEntries(response.headers.entries()),
+        errorDetails,
+      },
+      `Request details:`,
     );
   }
 
-  return new Error(errorMessage, {
-    cause: { url, method, contentType, body, response },
+  const error = new Error(detailedErrorMessage, {
+    cause: {
+      url,
+      method,
+      contentType,
+      body,
+      response,
+      status: response.status,
+      statusText: response.statusText,
+      headers: Object.fromEntries(response.headers.entries()),
+      errorDetails,
+    },
   });
+
+  return error;
 }
 
 /**
