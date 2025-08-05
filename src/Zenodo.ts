@@ -44,7 +44,7 @@ export class Zenodo {
   static async create(options: ZenodoOptions): Promise<Zenodo> {
     const zenodo = new Zenodo(options);
     const response = await fetchZenodo(zenodo, {
-      route: 'deposit/depositions',
+      route: 'user/records',
       expectedStatus: 200,
     });
     if (!response.ok) {

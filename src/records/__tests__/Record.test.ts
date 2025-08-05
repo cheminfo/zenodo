@@ -21,7 +21,7 @@ afterEach(async () => {
       await zenodo.deleteRecord(record.value.id);
     }
   }
-});
+}, 50000);
 
 test('createFiles with retry logic and failures', async () => {
   const logger = new FifoLogger();
