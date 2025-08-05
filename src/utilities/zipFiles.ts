@@ -18,7 +18,7 @@ export async function zipFiles(files: File[], zipName: string): Promise<File> {
   const zipWriter = new ZipWriter(zipFileStream.writable);
 
   const attachmentPromises = files.map((file) =>
-    zipWriter.add(file.name, file.stream()),
+    zipWriter.add(`${zipName}/${file.name}`, file.stream()),
   );
 
   await Promise.all(attachmentPromises);

@@ -14,7 +14,7 @@ test('upload zip attachments', async () => {
 
   expect(zippedFiles).toBeInstanceOf(File);
   expect(zippedFiles.name).toBe('test-zip.zip');
-  expect(zippedFiles.size).equal(522);
+  expect(zippedFiles.size).equal(558);
   expect(zippedFiles.type).toBe('application/zip');
 
   // read the content of the zip file
