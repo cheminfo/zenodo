@@ -499,6 +499,11 @@ export async function fetchZenodo(
   if (contentType) {
     headers.set('Content-Type', contentType);
   }
+  if (method !== 'PUT' && !route.includes('files')) {
+    headers.set('Accept', 'application/vnd.inveniordm.v1+json');
+  } else {
+    headers.set('Accept', 'application/json');
+  }
 
   const requestOptions: RequestInit = {
     method,
