@@ -223,4 +223,15 @@ export class Record {
     );
     return await response.json();
   }
+
+  async reserveDOI(): Promise<Record> {
+    const response = await fetchZenodo(this.zenodo, {
+      route: `records/${this.value.id}/draft/pids/doi`,
+      method: 'POST',
+      expectedStatus: 201,
+    });
+    const updatedRecord = new Record(this.zenodo, await response.json());
+    this.zenodo.logger?.info(`Reserved DOI for record ${this.value.id}`);
+    return updatedRecord;
+  }
 }
