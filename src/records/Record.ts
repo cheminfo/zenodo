@@ -145,9 +145,9 @@ export class Record {
 
   async publish(): Promise<Record> {
     const response = await fetchZenodo(this.zenodo, {
-      route: `records/${this.value.id}/actions/publish`,
+      route: `records/${this.value.id}/draft/actions/publish`,
       method: 'POST',
-      expectedStatus: 201,
+      expectedStatus: 202,
     });
     const publishedRecord = new Record(this.zenodo, await response.json());
     this.zenodo.logger?.info(`Published record ${this.value.id}`);
@@ -156,7 +156,7 @@ export class Record {
 
   async newVersion(): Promise<Record> {
     const response = await fetchZenodo(this.zenodo, {
-      route: `records/${this.value.id}/actions/newversion`,
+      route: `records/${this.value.id}/versions`,
       method: 'POST',
       expectedStatus: 201,
     });
