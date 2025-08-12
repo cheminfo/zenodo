@@ -351,6 +351,20 @@ test('deleteFile method', async () => {
 
   files = await record.listFiles();
   expect(files).toHaveLength(0);
+
+  const file1 = new File(['test content 1'], 'test1.txt', {
+    type: 'text/plain',
+  });
+  const file2 = new File(['test content 2'], 'test2.txt', {
+    type: 'text/plain',
+  });
+  await record.uploadFiles([file1, file2]);
+  files = await record.listFiles();
+  expect(files).toHaveLength(2);
+
+  await record.deleteFiles([file1.name, file2.name]);
+  files = await record.listFiles();
+  expect(files).toHaveLength(0);
 }, 10000);
 
 test('createFilesAsZip method', async () => {
