@@ -304,7 +304,7 @@ async function handleFailedResponse(
         headers: Object.fromEntries(response.headers.entries()),
         errorDetails,
       },
-      `Request details:`,
+      `Request details: ${errorDetails ? JSON.stringify(errorDetails) : 'No details'}`,
     );
   }
   const error = new Error(detailedErrorMessage, {
