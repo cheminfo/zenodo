@@ -281,20 +281,22 @@ test('no logger', async () => {
   expect(result).toStrictEqual(mockResponse);
 });
 
-test('formdata body', async () => {
+test('file body', async () => {
   const mockResponse = new Response('{"success": true}', { status: 200 });
   mockFetch.mockResolvedValueOnce(mockResponse);
-  const formData = new FormData();
+  const file = new File(['test content'], 'test.txt', {
+    type: 'text/plain',
+  });
 
   await fetchZenodo(mockZenodo, {
     method: 'POST',
-    body: formData,
+    body: file,
   });
 
   const callArgs = mockFetch.mock.calls[0];
   expect(callArgs).toBeDefined();
   // @ts-expect-error callArgs is unknown type
-  expect(callArgs[1].body).toBe(formData);
+  expect(callArgs[1].body).toBe(file);
 });
 
 test('authentication error triggers verification', async () => {
