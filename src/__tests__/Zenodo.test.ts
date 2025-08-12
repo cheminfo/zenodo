@@ -3,13 +3,13 @@ import { FifoLogger } from 'fifo-logger';
 import { test, expect, afterEach } from 'vitest';
 
 import { Zenodo } from '../Zenodo.ts';
-import type { ZenodoMetadata } from '../utilities/ZenodoMetadataSchema.ts';
+import type { ZenodoMetadata } from '../records/RecordType.ts';
 
 import { getConfig } from './getConfig.ts';
 
 const config = getConfig();
 
-const publicRecordId = 1078495; // arbitrarily selected deposition: https://zenodo.org/records/1078495
+const publicRecordId = '1078495'; // arbitrarily selected deposition: https://zenodo.org/records/1078495
 
 afterEach(async () => {
   const zenodo = await Zenodo.create({
@@ -17,7 +17,7 @@ afterEach(async () => {
     accessToken: config.accessToken || '',
   });
   const records = await zenodo.listRecords();
-  const existing = records.filter((d) => d.value.state !== 'done');
+  const existing = records.filter((d) => d.value.status !== 'published');
   for (const record of existing) {
     if (record.value.id !== undefined) {
       await zenodo.deleteRecord(record.value.id);
@@ -71,16 +71,25 @@ test('authenticate', async () => {
   });
 
   const depositionMetadata: ZenodoMetadata = {
-    upload_type: 'dataset',
-    description: 'test zenodo authentication',
-    access_right: 'open',
-    title: 'test zenodo authentication',
-    creators: [
+    resource_type: { id: 'dataset' },
+    description: 'test retry logic',
+    title: 'test createFiles retry logic',
+    rights: [
       {
-        name: 'test',
+        id: 'cc-by-4.0',
       },
     ],
-    license: 'cc-by-1.0',
+    creators: [
+      {
+        person_or_org: {
+          name: 'test',
+          family_name: 'test',
+          given_name: 'retry',
+          type: 'personal',
+          identifiers: [{ identifier: 'retry-test', scheme: 'orcid' }],
+        },
+      },
+    ],
   };
 
   const firstRecord = await zenodo.createRecord(depositionMetadata);

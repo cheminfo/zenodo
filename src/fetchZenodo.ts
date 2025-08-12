@@ -25,7 +25,7 @@ interface FetchZenodoOptions {
    */
   expectedStatus?: number;
   searchParams?: Record<string, string>;
-  body?: string | FormData;
+  body?: string | File;
   /**
    * Maximum number of retry attempts.
    * @default 3
@@ -243,7 +243,7 @@ async function handleFailedResponse(
   url: string,
   method: string,
   contentType: string | undefined,
-  body: string | FormData | undefined,
+  body: string | File | undefined,
 ): Promise<Error> {
   const baseErrorMessage =
     responseStatuses[response.status]?.description || response.statusText;

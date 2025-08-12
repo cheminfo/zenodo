@@ -37,8 +37,6 @@
   "homepage": "https://github.com/cheminfo/zenodo#readme",
   "dependencies": {
     "@zip.js/zip.js": "^2.7.62",
-    "ajv": "^8.17.1",
-    "ajv-formats": "^3.0.1",
     "delay": "^6.0.0",
     "orcid-utils": "^1.2.2"
   },
@@ -52,7 +50,6 @@
     "eslint": "^9.29.0",
     "eslint-config-cheminfo-typescript": "^18.0.1",
     "fifo-logger": "^1.0.0",
-    "json-schema-to-ts": "^3.1.1",
     "prettier": "^3.5.3",
     "rimraf": "^6.0.1",
     "vitest": "^3.2.3"

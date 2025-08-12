@@ -1,12 +1,15 @@
 /* eslint-disable no-await-in-loop */
-import type { Zenodo, PublicRecordOptions } from '../Zenodo.ts';
+import type { Zenodo } from '../Zenodo.ts';
 import { ZenodoFile } from '../ZenodoFile.ts';
 import { fetchZenodo } from '../fetchZenodo.ts';
-import type { ZenodoMetadata } from '../utilities/ZenodoMetadataSchema.ts';
-import type { ZenodoRecord } from '../utilities/ZenodoRecordSchema.ts';
-import type { ZenodoReview } from '../utilities/ZenodoReviewSchema.ts';
-import { validateZenodoRecord } from '../utilities/schemaValidation.ts';
 import { zipFiles } from '../utilities/zipFiles.ts';
+
+import type { ZenodoRecord, ZenodoMetadata } from './RecordType.ts';
+import type { ZenodoReview } from './RequestType.ts';
+
+interface newVersionOptions {
+  linkFiles?: boolean;
+}
 
 export class Record {
   public value: ZenodoRecord;
@@ -14,7 +17,7 @@ export class Record {
 
   constructor(zenodo: Zenodo, value: unknown) {
     this.zenodo = zenodo;
-    this.value = validateZenodoRecord(value);
+    this.value = value as ZenodoRecord;
   }
 
   async uploadFiles(files: File[]): Promise<ZenodoFile[]> {
@@ -33,12 +36,10 @@ export class Record {
     // step 2: Upload a draft file(s) content
     const response = await Promise.all(
       files.map(async (file) => {
-        const formData = new FormData();
-        formData.append('file', file);
         await fetchZenodo(this.zenodo, {
           route: `records/${this.value.id}/draft/files/${file.name}/content`,
           method: 'PUT',
-          body: formData,
+          body: file,
           contentType: 'application/octet-stream',
           expectedStatus: 200,
         });
@@ -104,6 +105,15 @@ export class Record {
     );
   }
 
+  async deleteFiles(filenames: string[]): Promise<void> {
+    for (const filename of filenames) {
+      await this.deleteFile(filename);
+    }
+    this.zenodo.logger?.info(
+      `Deleted files ${filenames.join(', ')} for record ${this.value.id}`,
+    );
+  }
+
   async deleteAllFiles(): Promise<void> {
     const files = await this.listFiles();
     for (const file of files) {
@@ -123,14 +133,8 @@ export class Record {
     return file;
   }
 
-  async update(
-    metadata: ZenodoMetadata,
-    options: PublicRecordOptions = {},
-  ): Promise<Record> {
-    const { isPublished = false } = options;
-    const route = isPublished
-      ? `records/${this.value.id}`
-      : `records/${this.value.id}/draft`;
+  async update(metadata: ZenodoMetadata): Promise<Record> {
+    const route = `records/${this.value.id}/draft`;
     const response = await fetchZenodo(this.zenodo, {
       route,
       method: 'PUT',
@@ -154,15 +158,30 @@ export class Record {
     return publishedRecord;
   }
 
-  async newVersion(): Promise<Record> {
+  async newVersion(options: newVersionOptions = {}): Promise<Record> {
+    const { linkFiles = true } = options;
     const response = await fetchZenodo(this.zenodo, {
       route: `records/${this.value.id}/versions`,
       method: 'POST',
       expectedStatus: 201,
     });
     const newVersionRecord = new Record(this.zenodo, await response.json());
+    if (!linkFiles) {
+      return newVersionRecord;
+    }
+    await fetchZenodo(this.zenodo, {
+      route: `records/${newVersionRecord.value.id}/draft/actions/files-import`,
+      method: 'POST',
+      expectedStatus: 201,
+    });
+    if (!newVersionRecord.value.id) {
+      throw new Error('New version record ID is undefined');
+    }
+    const record = await this.zenodo.retrieveRecord(newVersionRecord.value.id, {
+      isPublished: false,
+    });
     this.zenodo.logger?.info(`Created new version for record ${this.value.id}`);
-    return newVersionRecord;
+    return record;
   }
 
   async submitForReview(url?: string): Promise<ZenodoReview> {
@@ -187,10 +206,10 @@ export class Record {
         };
       };
       const request = requests.hits.hits.find(
-        (req) => req.topic.record === String(this.value.id),
+        (req) => req.topic?.record === String(this.value.id),
       );
       await fetchZenodo(this.zenodo, {
-        route: request?.links.actions?.submit,
+        route: request?.links?.actions?.submit,
         method: 'POST',
         expectedStatus: 202,
       });

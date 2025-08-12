@@ -5,8 +5,8 @@ import type { ZenodoAuthenticationStatesType } from './ZenodoAuthenticationState
 import { fetchZenodo } from './fetchZenodo.ts';
 import type { ListDepositionsOptions } from './records/ListDepositionsOptions.ts';
 import { Record } from './records/Record.ts';
-import type { ZenodoMetadata } from './utilities/ZenodoMetadataSchema.ts';
-import type { ZenodoReview } from './utilities/ZenodoReviewSchema.ts';
+import type { ZenodoMetadata, Identifier } from './records/RecordType.ts';
+import type { ZenodoReview } from './records/RequestType.ts';
 
 interface ZenodoOptions {
   accessToken: string;
@@ -147,7 +147,7 @@ export class Zenodo {
    * @returns The public deposition record
    */
   async retrieveRecord(
-    id: number,
+    id: Identifier,
     options: PublicRecordOptions = {},
   ): Promise<Record> {
     const { isPublished = false } = options;
@@ -166,7 +166,7 @@ export class Zenodo {
    * @returns An object containing the total number of requests and the list of requests
    */
   async retrieveRequests(
-    depositionId?: number,
+    depositionId?: Identifier,
   ): Promise<{ hits: { total: number; hits: ZenodoReview[] } }> {
     const response = await fetchZenodo(this, {
       route: `requests/`,
@@ -188,7 +188,7 @@ export class Zenodo {
    * @param id - the deposition id
    * @returns unvalidated array of deposition versions
    */
-  async retrieveVersions(id: number): Promise<unknown[]> {
+  async retrieveVersions(id: Identifier): Promise<unknown[]> {
     const response = await fetchZenodo(this, {
       route: `records/${id}/versions`,
     });
@@ -203,7 +203,7 @@ export class Zenodo {
   }
 
   async deleteRecord(
-    id: number,
+    id: Identifier,
     options: PublicRecordOptions = {},
   ): Promise<void> {
     const { isPublished = false } = options;

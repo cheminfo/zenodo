@@ -5,7 +5,7 @@ import { test, expect, afterEach } from 'vitest';
 
 import { Zenodo } from '../../Zenodo.ts';
 import { getConfig } from '../../__tests__/getConfig.ts';
-import type { ZenodoMetadata } from '../../utilities/ZenodoMetadataSchema.ts';
+import type { ZenodoMetadata } from '../RecordType.ts';
 
 const config = getConfig();
 
@@ -15,7 +15,7 @@ afterEach(async () => {
     accessToken: config.accessToken || '',
   });
   const records = await zenodo.listRecords();
-  const existing = records.filter((d) => d.value.state !== 'done');
+  const existing = records.filter((d) => d.value.status !== 'published');
   for (const record of existing) {
     if (record.value.id !== undefined) {
       await zenodo.deleteRecord(record.value.id);
@@ -32,12 +32,25 @@ test('createFiles with retry logic and failures', async () => {
   });
 
   const recordMetadata: ZenodoMetadata = {
-    upload_type: 'dataset',
+    resource_type: { id: 'dataset' },
     description: 'test retry logic',
-    access_right: 'open',
     title: 'test createFiles retry logic',
-    license: 'cc-by-1.0',
-    creators: [{ name: 'test' }],
+    rights: [
+      {
+        id: 'cc-by-4.0',
+      },
+    ],
+    creators: [
+      {
+        person_or_org: {
+          name: 'test',
+          family_name: 'test',
+          given_name: 'retry',
+          type: 'personal',
+          identifiers: [{ identifier: 'retry-test', scheme: 'orcid' }],
+        },
+      },
+    ],
   };
 
   const record = await zenodo.createRecord(recordMetadata);
@@ -67,12 +80,25 @@ test('retrieveFile method', async () => {
   });
 
   const recordMetadata: ZenodoMetadata = {
-    upload_type: 'dataset',
-    description: 'test retrieveFile',
-    access_right: 'open',
-    title: 'test retrieveFile method',
-    license: 'cc-by-1.0',
-    creators: [{ name: 'test' }],
+    resource_type: { id: 'dataset' },
+    description: 'test retry logic',
+    title: 'test createFiles retry logic',
+    rights: [
+      {
+        id: 'cc-by-4.0',
+      },
+    ],
+    creators: [
+      {
+        person_or_org: {
+          name: 'test',
+          family_name: 'test',
+          given_name: 'retry',
+          type: 'personal',
+          identifiers: [{ identifier: 'retry-test', scheme: 'orcid' }],
+        },
+      },
+    ],
   };
 
   const record = await zenodo.createRecord(recordMetadata);
@@ -101,12 +127,25 @@ test('update record metadata', async () => {
   });
 
   const recordMetadata: ZenodoMetadata = {
-    upload_type: 'dataset',
-    description: 'original description',
-    access_right: 'open',
-    title: 'original title',
-    license: 'cc-by-1.0',
-    creators: [{ name: 'test' }],
+    resource_type: { id: 'dataset' },
+    description: 'test retry logic',
+    title: 'test createFiles retry logic',
+    rights: [
+      {
+        id: 'cc-by-4.0',
+      },
+    ],
+    creators: [
+      {
+        person_or_org: {
+          name: 'test',
+          family_name: 'test',
+          given_name: 'retry',
+          type: 'personal',
+          identifiers: [{ identifier: 'retry-test', scheme: 'orcid' }],
+        },
+      },
+    ],
   };
 
   const record = await zenodo.createRecord(recordMetadata);
@@ -121,7 +160,7 @@ test('update record metadata', async () => {
 
   expect(updatedRecord.value.metadata?.description).toBe('updated description');
   expect(updatedRecord.value.metadata?.title).toBe('updated title');
-  expect(updatedRecord.value.id).toBe(record.value.id);
+  expect(Number(updatedRecord.value.id)).toEqual(Number(record.value.id));
 }, 10000);
 
 test.todo('newVersion method', async () => {
@@ -133,12 +172,25 @@ test.todo('newVersion method', async () => {
   });
 
   const recordMetadata: ZenodoMetadata = {
-    upload_type: 'dataset',
-    description: 'test newVersion',
-    access_right: 'open',
-    title: 'test newVersion method',
-    license: 'cc-by-1.0',
-    creators: [{ name: 'test' }],
+    resource_type: { id: 'dataset' },
+    description: 'test retry logic',
+    title: 'test createFiles retry logic',
+    rights: [
+      {
+        id: 'cc-by-4.0',
+      },
+    ],
+    creators: [
+      {
+        person_or_org: {
+          name: 'test',
+          family_name: 'test',
+          given_name: 'retry',
+          type: 'personal',
+          identifiers: [{ identifier: 'retry-test', scheme: 'orcid' }],
+        },
+      },
+    ],
   };
 
   const record = await zenodo.createRecord(recordMetadata);
@@ -149,11 +201,11 @@ test.todo('newVersion method', async () => {
   await record.uploadFiles([fileData]);
 
   const publishedRecord = await record.publish();
-  expect(publishedRecord.value.state).toBe('done');
+  expect(publishedRecord.value.status).toBe('published');
 
   const newVersion = await publishedRecord.newVersion();
   expect(newVersion.value.id).not.toBe(record.value.id);
-  expect(newVersion.value.state).toBe('unsubmitted');
+  expect(newVersion.value.status).toBe('unsubmitted');
 
   expect(newVersion.value.metadata?.publication_date).toBeDefined();
   expect(newVersion.value.metadata?.publication_date).toMatch(
@@ -170,12 +222,25 @@ test.todo('submitForReview without URL', async () => {
   });
 
   const recordMetadata: ZenodoMetadata = {
-    upload_type: 'dataset',
-    description: 'test submitForReview',
-    access_right: 'open',
-    title: 'test submitForReview method',
-    license: 'cc-by-1.0',
-    creators: [{ name: 'test' }],
+    resource_type: { id: 'dataset' },
+    description: 'test retry logic',
+    title: 'test createFiles retry logic',
+    rights: [
+      {
+        id: 'cc-by-4.0',
+      },
+    ],
+    creators: [
+      {
+        person_or_org: {
+          name: 'test',
+          family_name: 'test',
+          given_name: 'retry',
+          type: 'personal',
+          identifiers: [{ identifier: 'retry-test', scheme: 'orcid' }],
+        },
+      },
+    ],
   };
 
   const record = await zenodo.createRecord(recordMetadata);
@@ -187,7 +252,7 @@ test.todo('submitForReview without URL', async () => {
 
   const review = await record.submitForReview();
   expect(review).toBeDefined();
-  expect(review.topic.record).toBe(String(record.value.id));
+  expect(review.topic?.record).toBe(String(record.value.id));
 });
 
 test.todo('submitForReview with URL', async () => {
@@ -199,12 +264,25 @@ test.todo('submitForReview with URL', async () => {
   });
 
   const recordMetadata: ZenodoMetadata = {
-    upload_type: 'dataset',
-    description: 'test submitForReview with URL',
-    access_right: 'open',
-    title: 'test submitForReview with URL method',
-    license: 'cc-by-1.0',
-    creators: [{ name: 'test' }],
+    resource_type: { id: 'dataset' },
+    description: 'test retry logic',
+    title: 'test createFiles retry logic',
+    rights: [
+      {
+        id: 'cc-by-4.0',
+      },
+    ],
+    creators: [
+      {
+        person_or_org: {
+          name: 'test',
+          family_name: 'test',
+          given_name: 'retry',
+          type: 'personal',
+          identifiers: [{ identifier: 'retry-test', scheme: 'orcid' }],
+        },
+      },
+    ],
   };
 
   const record = await zenodo.createRecord(recordMetadata);
@@ -216,7 +294,7 @@ test.todo('submitForReview with URL', async () => {
 
   const reviewWithoutUrl = await record.submitForReview();
 
-  const submitUrl = reviewWithoutUrl.links.actions?.submit;
+  const submitUrl = reviewWithoutUrl.links?.actions?.submit;
   expect(submitUrl).toBeDefined();
 
   const reviewWithUrl = await record.submitForReview(submitUrl);
@@ -232,12 +310,25 @@ test('deleteFile method', async () => {
   });
 
   const recordMetadata: ZenodoMetadata = {
-    upload_type: 'dataset',
-    description: 'test deleteFile',
-    access_right: 'open',
-    title: 'test deleteFile method',
-    license: 'cc-by-1.0',
-    creators: [{ name: 'test' }],
+    resource_type: { id: 'dataset' },
+    description: 'test retry logic',
+    title: 'test createFiles retry logic',
+    rights: [
+      {
+        id: 'cc-by-4.0',
+      },
+    ],
+    creators: [
+      {
+        person_or_org: {
+          name: 'test',
+          family_name: 'test',
+          given_name: 'retry',
+          type: 'personal',
+          identifiers: [{ identifier: 'retry-test', scheme: 'orcid' }],
+        },
+      },
+    ],
   };
 
   const record = await zenodo.createRecord(recordMetadata);
@@ -271,12 +362,25 @@ test('createFilesAsZip method', async () => {
   });
 
   const recordMetadata: ZenodoMetadata = {
-    upload_type: 'dataset',
-    description: 'test createFilesAsZip',
-    access_right: 'open',
-    title: 'test createFilesAsZip method',
-    license: 'cc-by-1.0',
-    creators: [{ name: 'test' }],
+    resource_type: { id: 'dataset' },
+    description: 'test retry logic',
+    title: 'test createFiles retry logic',
+    rights: [
+      {
+        id: 'cc-by-4.0',
+      },
+    ],
+    creators: [
+      {
+        person_or_org: {
+          name: 'test',
+          family_name: 'test',
+          given_name: 'retry',
+          type: 'personal',
+          identifiers: [{ identifier: 'retry-test', scheme: 'orcid' }],
+        },
+      },
+    ],
   };
 
   const record = await zenodo.createRecord(recordMetadata);
@@ -306,14 +410,23 @@ test('basic record manipulations', async () => {
   });
 
   const recordMetadata: ZenodoMetadata = {
-    upload_type: 'dataset',
-    description: 'test basic record manipulations',
-    access_right: 'open',
-    title: 'test basic manipulations from npm library zenodo',
-    license: 'cc-by-1.0',
+    resource_type: { id: 'dataset' },
+    description: 'test retry logic',
+    title: 'test createFiles retry logic',
+    rights: [
+      {
+        id: 'cc-by-4.0',
+      },
+    ],
     creators: [
       {
-        name: 'test',
+        person_or_org: {
+          name: 'test',
+          family_name: 'test',
+          given_name: 'retry',
+          type: 'personal',
+          identifiers: [{ identifier: 'retry-test', scheme: 'orcid' }],
+        },
       },
     ],
   };
@@ -344,7 +457,10 @@ test('basic record manipulations', async () => {
   const emptyFiles = await record.listFiles();
   expect(emptyFiles.length).toBe(0);
 
-  if (typeof record.value.id === 'number') {
+  if (
+    typeof record.value.id === 'string' ||
+    typeof record.value.id === 'number'
+  ) {
     await zenodo.deleteRecord(record.value.id);
   } else {
     throw new Error('Record ID is undefined');
@@ -362,16 +478,25 @@ test('add to community', async () => {
     logger,
   });
   const recordMetadata: ZenodoMetadata = {
-    upload_type: 'dataset',
-    description: 'test',
-    access_right: 'open',
-    title: 'test community',
-    creators: [
+    resource_type: { id: 'dataset' },
+    description: 'test retry logic',
+    title: 'test createFiles retry logic',
+    rights: [
       {
-        name: 'test',
+        id: 'cc-by-4.0',
       },
     ],
-    license: 'cc-by-1.0',
+    creators: [
+      {
+        person_or_org: {
+          name: 'test',
+          family_name: 'test',
+          given_name: 'retry',
+          type: 'personal',
+          identifiers: [{ identifier: 'retry-test', scheme: 'orcid' }],
+        },
+      },
+    ],
   };
   const record = await zenodo.createRecord(recordMetadata);
   const firstFileData = new File(['Hello, World!'], 'example.txt', {
@@ -400,13 +525,23 @@ test.todo('publish record', async () => {
   });
 
   const recordMetadata: ZenodoMetadata = {
-    upload_type: 'dataset',
-    description: 'test',
-    access_right: 'open',
-    title: 'test publish from npm library zenodo',
+    resource_type: { id: 'dataset' },
+    description: 'test retry logic',
+    title: 'test createFiles retry logic',
+    rights: [
+      {
+        id: 'cc-by-4.0',
+      },
+    ],
     creators: [
       {
-        name: 'test',
+        person_or_org: {
+          name: 'test',
+          family_name: 'test',
+          given_name: 'retry',
+          type: 'personal',
+          identifiers: [{ identifier: 'retry-test', scheme: 'orcid' }],
+        },
       },
     ],
   };
@@ -416,12 +551,11 @@ test.todo('publish record', async () => {
 
   const publishedRecord = await record.publish();
   expect(publishedRecord.value.id).toBe(record.value.id);
-  expect(publishedRecord.value.state).toBe('done');
-  expect(publishedRecord.value.submitted).toBe(true);
+  expect(publishedRecord.value.status).toBe('published');
 
   const newVersion = await publishedRecord.newVersion();
   expect(newVersion.value.id).not.toBe(record.value.id);
-  expect(newVersion.value.state).toBe('unsubmitted');
+  expect(newVersion.value.status).toBe('unsubmitted');
 
   // @ts-expect-error newVersion is unknown type
   const versions = await zenodo.retrieveVersions(newVersion.value.id);
@@ -443,13 +577,23 @@ test.todo('submit for review', async () => {
   });
 
   const recordMetadata: ZenodoMetadata = {
-    upload_type: 'dataset',
-    description: 'test',
-    access_right: 'open',
-    title: 'test submit for review from npm library zenodo',
+    resource_type: { id: 'dataset' },
+    description: 'test retry logic',
+    title: 'test createFiles retry logic',
+    rights: [
+      {
+        id: 'cc-by-4.0',
+      },
+    ],
     creators: [
       {
-        name: 'test',
+        person_or_org: {
+          name: 'test',
+          family_name: 'test',
+          given_name: 'retry',
+          type: 'personal',
+          identifiers: [{ identifier: 'retry-test', scheme: 'orcid' }],
+        },
       },
     ],
   };
