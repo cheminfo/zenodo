@@ -5,7 +5,7 @@ import { responseStatuses } from './responseStatuses.ts';
 interface FetchZenodoOptions {
   /**
    * The route to append to the Zenodo base URL.
-   * @default 'deposit/depositions'
+   * @default 'user/records'
    */
   route?: string;
   /**
@@ -470,7 +470,7 @@ export async function fetchZenodo(
 ): Promise<Response> {
   const {
     body,
-    route = 'deposit/depositions',
+    route = 'user/records',
     method = 'GET',
     contentType = body instanceof FormData ? undefined : 'application/json',
     expectedStatus = 200,

@@ -61,7 +61,7 @@ export class Zenodo {
    * @returns true if authentication is successful, false otherwise.
    */
   async verifyAuthentication(): Promise<boolean> {
-    const url = `${this.baseURL}deposit/depositions`;
+    const url = `${this.baseURL}user/records`;
     const headers = new Headers();
 
     if (this.accessToken) {

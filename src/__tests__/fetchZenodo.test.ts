@@ -388,7 +388,7 @@ test('fetchZenodo builds url with searchParams', async () => {
 
   await fetchZenodo(mockZenodo, {
     searchParams: { q: 'test' },
-    route: 'deposit/depositions',
+    route: 'user/records',
   });
 
   // @ts-expect-error mockFetch can be undefined
