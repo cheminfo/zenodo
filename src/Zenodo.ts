@@ -1,4 +1,5 @@
 import type { Logger } from 'cheminfo-types';
+import { recursiveRemoveEmptyAndNull } from 'ml-spectra-processing';
 
 import { ZenodoAuthenticationStates } from './ZenodoAuthenticationStates.ts';
 import type { ZenodoAuthenticationStatesType } from './ZenodoAuthenticationStates.ts';
@@ -128,6 +129,7 @@ export class Zenodo {
    * @returns The created record object
    */
   async createRecord(metadata: ZenodoMetadata): Promise<Record> {
+    recursiveRemoveEmptyAndNull(metadata);
     const response = await fetchZenodo(this, {
       route: 'records',
       expectedStatus: 201,

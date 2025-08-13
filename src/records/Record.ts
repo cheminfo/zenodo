@@ -1,4 +1,5 @@
 /* eslint-disable no-await-in-loop */
+import { recursiveRemoveEmptyAndNull } from 'ml-spectra-processing';
 import pkg from 'orcid-utils';
 
 import type { Zenodo } from '../Zenodo.ts';
@@ -168,6 +169,7 @@ export class Record {
   }
 
   async update(metadata: ZenodoMetadata): Promise<Record> {
+    recursiveRemoveEmptyAndNull(metadata);
     const route = `records/${this.value.id}/draft`;
     const response = await fetchZenodo(this.zenodo, {
       route,
