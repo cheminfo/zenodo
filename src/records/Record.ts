@@ -103,8 +103,12 @@ export class Record {
   }
 
   async listFiles(): Promise<ZenodoFile[]> {
+    const route =
+      this.value.status === 'published'
+        ? `records/${this.value.id}/files`
+        : `records/${this.value.id}/draft/files`;
     const response = await fetchZenodo(this.zenodo, {
-      route: `records/${this.value.id}/draft/files`,
+      route,
     });
     const files = (await response.json()) as {
       entries: unknown[];
