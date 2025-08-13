@@ -1,4 +1,6 @@
 /* eslint-disable no-await-in-loop */
+import pkg from 'orcid-utils';
+
 import type { Zenodo } from '../Zenodo.ts';
 import { ZenodoFile } from '../ZenodoFile.ts';
 import { fetchZenodo } from '../fetchZenodo.ts';
@@ -7,8 +9,11 @@ import { zipFiles } from '../utilities/zipFiles.ts';
 import type { ZenodoRecord, ZenodoMetadata } from './RecordType.ts';
 import type { ZenodoReview } from './RequestType.ts';
 
+const { ORCID } = pkg;
+
 interface newVersionOptions {
   linkFiles?: boolean;
+  getDOI?: boolean;
 }
 
 export class Record {
@@ -17,6 +22,35 @@ export class Record {
 
   constructor(zenodo: Zenodo, value: unknown) {
     this.zenodo = zenodo;
+    if (zenodo.host === 'sandbox.zenodo.org') {
+      delete (value as ZenodoRecord).links?.doi;
+      delete (value as ZenodoRecord).links?.doi_html;
+      delete (value as ZenodoRecord).links?.parent_doi;
+      delete (value as ZenodoRecord).links?.parent_doi_html;
+    }
+
+    delete (value as ZenodoRecord).pids;
+
+    const metadata = (value as ZenodoRecord).metadata;
+    if (metadata?.creators) {
+      for (const creator of metadata.creators) {
+        const identifiers = creator.person_or_org?.identifiers;
+
+        if (
+          identifiers &&
+          identifiers.length > 0 &&
+          identifiers[0] &&
+          identifiers[0].scheme === 'ORCID' &&
+          typeof identifiers[0].identifier === 'string' &&
+          ORCID.validate(identifiers[0].identifier)
+        ) {
+          identifiers[0].identifier = ORCID.toDashFormat(
+            identifiers[0].identifier,
+          );
+        }
+      }
+    }
+
     this.value = value as ZenodoRecord;
   }
 
@@ -159,21 +193,23 @@ export class Record {
   }
 
   async newVersion(options: newVersionOptions = {}): Promise<Record> {
-    const { linkFiles = true } = options;
+    const { linkFiles = true, getDOI = true } = options;
     const response = await fetchZenodo(this.zenodo, {
       route: `records/${this.value.id}/versions`,
       method: 'POST',
       expectedStatus: 201,
     });
     const newVersionRecord = new Record(this.zenodo, await response.json());
-    if (!linkFiles) {
-      return newVersionRecord;
+    if (getDOI) {
+      await newVersionRecord.reserveDOI();
     }
-    await fetchZenodo(this.zenodo, {
-      route: `records/${newVersionRecord.value.id}/draft/actions/files-import`,
-      method: 'POST',
-      expectedStatus: 201,
-    });
+    if (linkFiles) {
+      await fetchZenodo(this.zenodo, {
+        route: `records/${newVersionRecord.value.id}/draft/actions/files-import`,
+        method: 'POST',
+        expectedStatus: 201,
+      });
+    }
     if (!newVersionRecord.value.id) {
       throw new Error('New version record ID is undefined');
     }
