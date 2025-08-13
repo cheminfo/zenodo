@@ -188,7 +188,7 @@ export class Zenodo {
    * @param id - the deposition id
    * @returns unvalidated array of deposition versions
    */
-  async retrieveVersions(id: Identifier): Promise<unknown[]> {
+  async retrieveVersions(id: Identifier): Promise<Record[]> {
     const response = await fetchZenodo(this, {
       route: `records/${id}/versions`,
     });
@@ -198,8 +198,10 @@ export class Zenodo {
     this.logger?.info(
       `Retrieved ${versions?.hits.total} versions for deposition ${id}`,
     );
-
-    return versions?.hits.hits || [];
+    const records = versions.hits.hits.map(
+      (version) => new Record(this, version),
+    );
+    return records;
   }
 
   async deleteRecord(
