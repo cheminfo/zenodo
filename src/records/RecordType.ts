@@ -32,6 +32,35 @@ export interface ZenodoRecord {
    * External persistent identifiers for a record including e.g. OAI-PMH identifier, minted DOIs and more. PIDs are registered in the PIDStore.
    */
   pids?: Record<string, ExternalPid>;
+  links?: {
+    self?: string;
+    self_html?: string;
+    preview_html?: string;
+    reserve_doi?: string;
+    doi?: string;
+    doi_html?: string;
+    parent_doi?: string;
+    parent_doi_html?: string;
+    self_iiif_manifest?: string;
+    self_iiif_sequence?: string;
+    files?: string;
+    media_files?: string;
+    archive?: string;
+    archive_media?: string;
+    versions?: string;
+    record?: string;
+    record_html?: string;
+    publish?: string;
+    review?: string;
+    access_links?: string;
+    access_grants?: string;
+    access_users?: string;
+    access_request?: string;
+    access?: string;
+    communities?: string;
+    communities_suggestions?: string;
+    requests?: string;
+  };
   metadata?: ZenodoMetadata;
   /**
    * Configured additional metadata
