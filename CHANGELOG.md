@@ -6,6 +6,37 @@
 * update axios ([2c121db](https://github.com/cheminfo/zenodo/commit/2c121db6e24bccd94468dad9ed2698463a19b5a4))
 
 <a name="1.0.1"></a>
+## [4.0.0](https://github.com/cheminfo/zenodo/compare/v3.0.0...v4.0.0) (2025-08-15)
+
+
+### ⚠ BREAKING CHANGES
+
+* using new API ([#18](https://github.com/cheminfo/zenodo/issues/18))
+* removed JSON schema and validation
+
+### Features
+
+* added details in fetchZenodo's logs ([7dccdc3](https://github.com/cheminfo/zenodo/commit/7dccdc371b67242d026859baf268772776eb425b))
+* added ORCID check ([7dccdc3](https://github.com/cheminfo/zenodo/commit/7dccdc371b67242d026859baf268772776eb425b))
+* added records ([7dccdc3](https://github.com/cheminfo/zenodo/commit/7dccdc371b67242d026859baf268772776eb425b))
+* added recursiveRemoveEmptyAndNull for parsing sent data ([7dccdc3](https://github.com/cheminfo/zenodo/commit/7dccdc371b67242d026859baf268772776eb425b))
+* added reserveDOI ([7dccdc3](https://github.com/cheminfo/zenodo/commit/7dccdc371b67242d026859baf268772776eb425b))
+
+
+### Bug Fixes
+
+* added details to fetch fails ([7dccdc3](https://github.com/cheminfo/zenodo/commit/7dccdc371b67242d026859baf268772776eb425b))
+* added isPublished to listFiles() ([7dccdc3](https://github.com/cheminfo/zenodo/commit/7dccdc371b67242d026859baf268772776eb425b))
+* link as object not array ([7dccdc3](https://github.com/cheminfo/zenodo/commit/7dccdc371b67242d026859baf268772776eb425b))
+* removed old urls ([7dccdc3](https://github.com/cheminfo/zenodo/commit/7dccdc371b67242d026859baf268772776eb425b))
+* retrieve versions now returns record ([7dccdc3](https://github.com/cheminfo/zenodo/commit/7dccdc371b67242d026859baf268772776eb425b))
+
+
+### Code Refactoring
+
+* removed JSON schema and validation ([7dccdc3](https://github.com/cheminfo/zenodo/commit/7dccdc371b67242d026859baf268772776eb425b))
+* using new API ([#18](https://github.com/cheminfo/zenodo/issues/18)) ([7dccdc3](https://github.com/cheminfo/zenodo/commit/7dccdc371b67242d026859baf268772776eb425b))
+
 ## [3.0.0](https://github.com/cheminfo/zenodo/compare/v2.0.0...v3.0.0) (2025-07-25)
 
 
