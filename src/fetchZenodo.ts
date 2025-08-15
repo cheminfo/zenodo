@@ -5,7 +5,7 @@ import { responseStatuses } from './responseStatuses.ts';
 interface FetchZenodoOptions {
   /**
    * The route to append to the Zenodo base URL.
-   * @default 'deposit/depositions'
+   * @default 'user/records'
    */
   route?: string;
   /**
@@ -25,7 +25,7 @@ interface FetchZenodoOptions {
    */
   expectedStatus?: number;
   searchParams?: Record<string, string>;
-  body?: string | FormData;
+  body?: string | File;
   /**
    * Maximum number of retry attempts.
    * @default 3
@@ -196,17 +196,35 @@ async function performFetchAttempt(
     `Attempt ${attempt + 1} for ${requestOptions.method} ${url}`,
   );
 
-  const response = await fetch(url, requestOptions);
+  try {
+    const response = await fetch(url, requestOptions);
 
-  // Check rate limit headers
-  const rateLimitInfo = extractRateLimitInfo(response);
-  if (rateLimitInfo && zenodo.logger) {
-    zenodo.logger.debug(
-      `Rate limit status: ${rateLimitInfo.remaining}/${rateLimitInfo.limit} remaining, resets at ${rateLimitInfo.reset}`,
+    // Check rate limit headers
+    const rateLimitInfo = extractRateLimitInfo(response);
+    if (rateLimitInfo && zenodo.logger) {
+      zenodo.logger.debug(
+        `Rate limit status: ${rateLimitInfo.remaining}/${rateLimitInfo.limit} remaining, resets at ${rateLimitInfo.reset}`,
+      );
+    }
+
+    // Log response details for debugging
+    zenodo.logger?.debug(
+      `Response status: ${response.status} ${response.statusText}`,
     );
-  }
 
-  return response;
+    return response;
+  } catch (fetchError) {
+    zenodo.logger?.error(
+      {
+        url,
+        method: requestOptions.method,
+        error:
+          fetchError instanceof Error ? fetchError.message : String(fetchError),
+      },
+      `Network error on attempt ${attempt + 1}:`,
+    );
+    throw fetchError;
+  }
 }
 
 /**
@@ -225,20 +243,84 @@ async function handleFailedResponse(
   url: string,
   method: string,
   contentType: string | undefined,
-  body: string | FormData | undefined,
+  body: string | File | undefined,
 ): Promise<Error> {
-  const errorMessage =
+  const baseErrorMessage =
     responseStatuses[response.status]?.description || response.statusText;
-
-  if (!(await shouldRetry(response.status, zenodo))) {
-    zenodo.logger?.error(
-      `Non-retryable error fetching ${url} with ${method}: ${errorMessage}`,
+  let detailedErrorMessage = baseErrorMessage;
+  let errorDetails: unknown = null;
+  try {
+    const responseText = await response.text();
+    if (responseText) {
+      try {
+        errorDetails = JSON.parse(responseText);
+        if (errorDetails && typeof errorDetails === 'object') {
+          const errorObj = errorDetails as Record<string, unknown>;
+          if (errorObj.message && typeof errorObj.message === 'string') {
+            detailedErrorMessage = `${baseErrorMessage}: ${errorObj.message}`;
+          } else if (errorObj.error && typeof errorObj.error === 'string') {
+            detailedErrorMessage = `${baseErrorMessage}: ${errorObj.error}`;
+          } else if (errorObj.errors && Array.isArray(errorObj.errors)) {
+            const errorMessages = errorObj.errors
+              .map((err: unknown) =>
+                typeof err === 'string'
+                  ? err
+                  : err &&
+                      typeof err === 'object' &&
+                      'message' in err &&
+                      typeof (err as Record<string, unknown>).message ===
+                        'string'
+                    ? ((err as Record<string, unknown>).message as string)
+                    : JSON.stringify(err),
+              )
+              .join(', ');
+            detailedErrorMessage = `${baseErrorMessage}: ${errorMessages}`;
+          } else {
+            detailedErrorMessage = `${baseErrorMessage}: ${JSON.stringify(errorDetails)}`;
+          }
+        } else {
+          detailedErrorMessage = `${baseErrorMessage}: ${responseText}`;
+        }
+      } catch {
+        detailedErrorMessage = `${baseErrorMessage}: ${responseText}`;
+      }
+    }
+  } catch (textError) {
+    // If we can't read the response body, log the attempt
+    zenodo.logger?.warn(
+      `Could not read error response body: ${textError instanceof Error ? textError.message : String(textError)}`,
     );
   }
-
-  return new Error(errorMessage, {
-    cause: { url, method, contentType, body, response },
+  if (!(await shouldRetry(response.status, zenodo))) {
+    zenodo.logger?.error(
+      `Non-retryable error fetching ${url} with ${method}: ${detailedErrorMessage}`,
+    );
+    zenodo.logger?.error(
+      {
+        url,
+        method,
+        contentType,
+        status: response.status,
+        headers: Object.fromEntries(response.headers.entries()),
+        errorDetails,
+      },
+      `Request details: ${errorDetails ? JSON.stringify(errorDetails) : 'No details'}`,
+    );
+  }
+  const error = new Error(detailedErrorMessage, {
+    cause: {
+      url,
+      method,
+      contentType,
+      body,
+      response,
+      status: response.status,
+      statusText: response.statusText,
+      headers: Object.fromEntries(response.headers.entries()),
+      errorDetails,
+    },
   });
+  return error;
 }
 
 /**
@@ -388,7 +470,7 @@ export async function fetchZenodo(
 ): Promise<Response> {
   const {
     body,
-    route = 'deposit/depositions',
+    route = 'user/records',
     method = 'GET',
     contentType = body instanceof FormData ? undefined : 'application/json',
     expectedStatus = 200,
@@ -416,6 +498,11 @@ export async function fetchZenodo(
   }
   if (contentType) {
     headers.set('Content-Type', contentType);
+  }
+  if (method !== 'PUT' && !route.includes('files')) {
+    headers.set('Accept', 'application/vnd.inveniordm.v1+json');
+  } else {
+    headers.set('Accept', 'application/json');
   }
 
   const requestOptions: RequestInit = {

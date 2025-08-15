@@ -1,0 +1,298 @@
+/* eslint-disable no-await-in-loop */
+import { recursiveRemoveEmptyAndNull } from 'ml-spectra-processing';
+import pkg from 'orcid-utils';
+
+import type { Zenodo } from '../Zenodo.ts';
+import { ZenodoFile } from '../ZenodoFile.ts';
+import { fetchZenodo } from '../fetchZenodo.ts';
+import { zipFiles } from '../utilities/zipFiles.ts';
+
+import type { ZenodoRecord, ZenodoMetadata } from './RecordType.ts';
+import type { ZenodoReview } from './RequestType.ts';
+
+const { ORCID } = pkg;
+
+interface newVersionOptions {
+  linkFiles?: boolean;
+  getDOI?: boolean;
+}
+
+export class Record {
+  public value: ZenodoRecord;
+  private zenodo: Zenodo;
+
+  constructor(zenodo: Zenodo, value: unknown) {
+    this.zenodo = zenodo;
+    if (zenodo.host === 'sandbox.zenodo.org') {
+      delete (value as ZenodoRecord).links?.doi;
+      delete (value as ZenodoRecord).links?.doi_html;
+      delete (value as ZenodoRecord).links?.parent_doi;
+      delete (value as ZenodoRecord).links?.parent_doi_html;
+    }
+
+    delete (value as ZenodoRecord).pids;
+
+    const metadata = (value as ZenodoRecord).metadata;
+    if (metadata?.creators) {
+      for (const creator of metadata.creators) {
+        const identifiers = creator.person_or_org?.identifiers;
+
+        if (
+          identifiers &&
+          identifiers.length > 0 &&
+          identifiers[0] &&
+          identifiers[0].scheme === 'ORCID' &&
+          typeof identifiers[0].identifier === 'string' &&
+          ORCID.validate(identifiers[0].identifier)
+        ) {
+          identifiers[0].identifier = ORCID.toDashFormat(
+            identifiers[0].identifier,
+          );
+        }
+      }
+    }
+
+    this.value = value as ZenodoRecord;
+  }
+
+  async uploadFiles(files: File[]): Promise<ZenodoFile[]> {
+    // step 1: Start draft file upload(s)
+    const step1Body = files.map((file) => ({
+      key: file.name,
+    }));
+    await fetchZenodo(this.zenodo, {
+      route: `/records/${this.value.id}/draft/files`,
+      method: 'POST',
+      body: JSON.stringify(step1Body),
+      contentType: 'application/json',
+      expectedStatus: 201,
+    });
+
+    // step 2: Upload a draft file(s) content
+    const response = await Promise.all(
+      files.map(async (file) => {
+        await fetchZenodo(this.zenodo, {
+          route: `records/${this.value.id}/draft/files/${file.name}/content`,
+          method: 'PUT',
+          body: file,
+          contentType: 'application/octet-stream',
+          expectedStatus: 200,
+        });
+        // step 3: Complete a draft file upload
+        return await fetchZenodo(this.zenodo, {
+          route: `records/${this.value.id}/draft/files/${file.name}/commit`,
+          method: 'POST',
+          expectedStatus: 200,
+        });
+      }),
+    );
+    const zenodoFiles = await Promise.all(
+      response.map(
+        async (res) => new ZenodoFile(this.zenodo, await res.json()),
+      ),
+    );
+    return zenodoFiles;
+  }
+
+  async uploadFilesAsZip(
+    files: File[],
+    zipFileName: string,
+  ): Promise<ZenodoFile[]> {
+    const zippedFiles = await zipFiles(files, zipFileName);
+    return await this.uploadFiles([zippedFiles]);
+  }
+
+  async listFiles(): Promise<ZenodoFile[]> {
+    const route =
+      this.value.status === 'published'
+        ? `records/${this.value.id}/files`
+        : `records/${this.value.id}/draft/files`;
+    const response = await fetchZenodo(this.zenodo, {
+      route,
+    });
+    const files = (await response.json()) as {
+      entries: unknown[];
+      links: {
+        self: string;
+        next?: string;
+      };
+    };
+
+    if (files.entries.length === 0) {
+      this.zenodo.logger?.info(`No files found for record ${this.value.id}`);
+      return [];
+    } else if (files.links.next) {
+      this.zenodo.logger?.warn(
+        `Multiple pages of files found for record ${this.value.id}. Only the first page is returned.`,
+      );
+    }
+    this.zenodo.logger?.info(
+      `Listed ${files.entries.length} files for deposition ${this.value.id}`,
+    );
+
+    return files.entries.map((file) => new ZenodoFile(this.zenodo, file));
+  }
+
+  async deleteFile(filename: string): Promise<void> {
+    await fetchZenodo(this.zenodo, {
+      route: `records/${this.value.id}/draft/files/${filename}`,
+      method: 'DELETE',
+      expectedStatus: 204,
+    });
+    this.zenodo.logger?.info(
+      `Deleted file ${filename} for record ${this.value.id}`,
+    );
+  }
+
+  async deleteFiles(filenames: string[]): Promise<void> {
+    for (const filename of filenames) {
+      await this.deleteFile(filename);
+    }
+    this.zenodo.logger?.info(
+      `Deleted files ${filenames.join(', ')} for record ${this.value.id}`,
+    );
+  }
+
+  async deleteAllFiles(): Promise<void> {
+    const files = await this.listFiles();
+    for (const file of files) {
+      await this.deleteFile(file.value.key);
+    }
+    this.zenodo.logger?.info(`Deleted all files for record ${this.value.id}`);
+  }
+
+  async retrieveFile(filename: string): Promise<ZenodoFile> {
+    const response = await fetchZenodo(this.zenodo, {
+      route: `records/${this.value.id}/draft/files/${filename}`,
+    });
+    const file = new ZenodoFile(this.zenodo, await response.json());
+    this.zenodo.logger?.info(
+      `Retrieved file ${filename} for record ${this.value.id}`,
+    );
+    return file;
+  }
+
+  async update(metadata: ZenodoMetadata): Promise<Record> {
+    recursiveRemoveEmptyAndNull(metadata);
+    const route = `records/${this.value.id}/draft`;
+    const response = await fetchZenodo(this.zenodo, {
+      route,
+      method: 'PUT',
+      body: JSON.stringify({ metadata }),
+      contentType: 'application/json',
+      expectedStatus: 200,
+    });
+    const updatedRecord = new Record(this.zenodo, await response.json());
+    this.zenodo.logger?.info(`Updated record ${this.value.id}`);
+    return updatedRecord;
+  }
+
+  async publish(): Promise<Record> {
+    const response = await fetchZenodo(this.zenodo, {
+      route: `records/${this.value.id}/draft/actions/publish`,
+      method: 'POST',
+      expectedStatus: 202,
+    });
+    const publishedRecord = new Record(this.zenodo, await response.json());
+    this.zenodo.logger?.info(`Published record ${this.value.id}`);
+    return publishedRecord;
+  }
+
+  async newVersion(options: newVersionOptions = {}): Promise<Record> {
+    const { linkFiles = true, getDOI = true } = options;
+    const response = await fetchZenodo(this.zenodo, {
+      route: `records/${this.value.id}/versions`,
+      method: 'POST',
+      expectedStatus: 201,
+    });
+    const newVersionRecord = new Record(this.zenodo, await response.json());
+    if (getDOI) {
+      await newVersionRecord.reserveDOI();
+    }
+    if (linkFiles) {
+      await fetchZenodo(this.zenodo, {
+        route: `records/${newVersionRecord.value.id}/draft/actions/files-import`,
+        method: 'POST',
+        expectedStatus: 201,
+      });
+    }
+    if (!newVersionRecord.value.id) {
+      throw new Error('New version record ID is undefined');
+    }
+    const record = await this.zenodo.retrieveRecord(newVersionRecord.value.id, {
+      isPublished: false,
+    });
+    this.zenodo.logger?.info(`Created new version for record ${this.value.id}`);
+    return record;
+  }
+
+  async submitForReview(url?: string): Promise<ZenodoReview> {
+    if (url) {
+      url = url.replace(/.*requests\//, 'requests/');
+      const response = await fetchZenodo(this.zenodo, {
+        route: url,
+        method: 'POST',
+      });
+      this.zenodo.logger?.info(
+        `Submitted deposition ${this.value.id} for review via URL ${url}`,
+      );
+      return (await response.json()) as ZenodoReview;
+    } else {
+      const response = await fetchZenodo(this.zenodo, {
+        route: `requests`,
+      });
+      const requests = (await response.json()) as {
+        hits: {
+          total: number;
+          hits: ZenodoReview[];
+        };
+      };
+      const request = requests.hits.hits.find(
+        (req) => req.topic?.record === String(this.value.id),
+      );
+      await fetchZenodo(this.zenodo, {
+        route: request?.links?.actions?.submit,
+        method: 'POST',
+        expectedStatus: 202,
+      });
+      this.zenodo.logger?.info(
+        `Submitted deposition ${this.value.id} for review`,
+      );
+      return request as ZenodoReview;
+    }
+  }
+
+  /**
+   * Adds the deposition to a community.
+   * This method adds the deposition to a community by creating a review request.
+   * @param communityId - the ID of the community to add the deposition to
+   * @returns the response from the Zenodo API
+   */
+  async addToCommunity(communityId: string): Promise<unknown> {
+    const body = JSON.stringify({
+      receiver: { community: communityId },
+      type: 'community-submission',
+    });
+    const response = await fetchZenodo(this.zenodo, {
+      route: `records/${this.value.id}/draft/review`,
+      method: 'PUT',
+      body,
+      expectedStatus: 200,
+    });
+    this.zenodo.logger?.info(
+      `Added deposition ${this.value.id} to community ${communityId}`,
+    );
+    return await response.json();
+  }
+
+  async reserveDOI(): Promise<Record> {
+    const response = await fetchZenodo(this.zenodo, {
+      route: `records/${this.value.id}/draft/pids/doi`,
+      method: 'POST',
+      expectedStatus: 201,
+    });
+    const updatedRecord = new Record(this.zenodo, await response.json());
+    this.zenodo.logger?.info(`Reserved DOI for record ${this.value.id}`);
+    return updatedRecord;
+  }
+}

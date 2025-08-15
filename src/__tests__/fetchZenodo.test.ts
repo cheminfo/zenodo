@@ -22,13 +22,12 @@ interface MockZenodo {
   logger: MockLogger;
   host: string;
   authenticationState: ZenodoAuthenticationStatesType;
-  listDepositions: ReturnType<typeof vi.fn>;
-  createDeposition: ReturnType<typeof vi.fn>;
-  retrieveDeposition: ReturnType<typeof vi.fn>;
+  listRecords: ReturnType<typeof vi.fn>;
+  createRecord: ReturnType<typeof vi.fn>;
   retrieveRecord: ReturnType<typeof vi.fn>;
   retrieveRequests: ReturnType<typeof vi.fn>;
   retrieveVersions: ReturnType<typeof vi.fn>;
-  deleteDeposition: ReturnType<typeof vi.fn>;
+  deleteRecord: ReturnType<typeof vi.fn>;
   verifyAuthentication: ReturnType<typeof vi.fn>;
 }
 
@@ -46,13 +45,12 @@ const mockZenodo: MockZenodo = {
   },
   host: 'sandbox.zenodo.org',
   authenticationState: ZenodoAuthenticationStates.NOT_TRIED,
-  listDepositions: vi.fn(),
-  createDeposition: vi.fn(),
-  retrieveDeposition: vi.fn(),
+  listRecords: vi.fn(),
+  createRecord: vi.fn(),
   retrieveRecord: vi.fn(),
   retrieveRequests: vi.fn(),
   retrieveVersions: vi.fn(),
-  deleteDeposition: vi.fn(),
+  deleteRecord: vi.fn(),
   verifyAuthentication: vi
     .fn()
     .mockImplementation(async function verifyAuthentication(this: MockZenodo) {
@@ -283,20 +281,22 @@ test('no logger', async () => {
   expect(result).toStrictEqual(mockResponse);
 });
 
-test('formdata body', async () => {
+test('file body', async () => {
   const mockResponse = new Response('{"success": true}', { status: 200 });
   mockFetch.mockResolvedValueOnce(mockResponse);
-  const formData = new FormData();
+  const file = new File(['test content'], 'test.txt', {
+    type: 'text/plain',
+  });
 
   await fetchZenodo(mockZenodo, {
     method: 'POST',
-    body: formData,
+    body: file,
   });
 
   const callArgs = mockFetch.mock.calls[0];
   expect(callArgs).toBeDefined();
   // @ts-expect-error callArgs is unknown type
-  expect(callArgs[1].body).toBe(formData);
+  expect(callArgs[1].body).toBe(file);
 });
 
 test('authentication error triggers verification', async () => {
@@ -320,4 +320,77 @@ test('authentication error triggers verification', async () => {
 
   expect(mockZenodo.verifyAuthentication).toHaveBeenCalledTimes(1);
   expect(mockFetch).toHaveBeenCalledTimes(2);
+});
+
+test('rate limit info missing reset header', async () => {
+  const resp = new Response('ok', {
+    status: 200,
+    headers: {
+      'X-RateLimit-Limit': '100',
+      'X-RateLimit-Remaining': '50', // reset missing
+    },
+  });
+  mockFetch.mockResolvedValueOnce(resp);
+
+  await fetchZenodo(mockZenodo, {});
+  expect(mockZenodo.logger.debug).not.toHaveBeenCalledWith(
+    expect.stringContaining('Rate limit status'),
+  );
+});
+
+test('calculateRateLimitDelay branch with remaining > 0', async () => {
+  const futureTime = Math.floor(Date.now() / 1000) + 5;
+  const rateLimitHeaders = {
+    'X-RateLimit-Limit': '100',
+    'X-RateLimit-Remaining': '5', // remaining > 0 triggers 0 delay
+    'X-RateLimit-Reset': futureTime.toString(),
+  };
+  const retryableResp = new Response('Still ok', {
+    status: 500,
+    headers: rateLimitHeaders,
+  });
+  const finalResp = new Response('{"success":true}', { status: 200 });
+
+  mockFetch
+    .mockResolvedValueOnce(retryableResp)
+    .mockResolvedValueOnce(finalResp);
+
+  await fetchZenodo(mockZenodo, { baseDelay: 10, useExponentialBackoff: true });
+  expect(mockFetch).toHaveBeenCalledTimes(2);
+});
+
+test('handleFailedResponse parses error.errors array with object entries', async () => {
+  const body = JSON.stringify({ errors: [{ message: 'bad thing' }] });
+  const errorResp = new Response(body, { status: 500 });
+  mockFetch.mockResolvedValueOnce(errorResp);
+
+  await expect(fetchZenodo(mockZenodo, {})).rejects.toThrow(/Request failed/);
+}, 10000);
+
+test('handleFailedResponse falls back to stringifying unknown object', async () => {
+  const body = JSON.stringify({ foo: 'bar' });
+  const errorResp = new Response(body, { status: 500 });
+  mockFetch.mockResolvedValueOnce(errorResp);
+
+  await expect(fetchZenodo(mockZenodo, {})).rejects.toThrow(/Request failed/);
+}, 10000);
+
+test('handleFailedResponse handles invalid JSON body', async () => {
+  const errorResp = new Response('{{ notjson }}', { status: 500 });
+  mockFetch.mockResolvedValueOnce(errorResp);
+
+  await expect(fetchZenodo(mockZenodo, {})).rejects.toThrow(/Request failed/);
+}, 10000);
+
+test('fetchZenodo builds url with searchParams', async () => {
+  const okResp = new Response('{"success": true}', { status: 200 });
+  mockFetch.mockResolvedValueOnce(okResp);
+
+  await fetchZenodo(mockZenodo, {
+    searchParams: { q: 'test' },
+    route: 'user/records',
+  });
+
+  // @ts-expect-error mockFetch can be undefined
+  expect(mockFetch.mock.calls[0][0]).toContain('?q=test');
 });
