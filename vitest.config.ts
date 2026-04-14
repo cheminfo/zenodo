@@ -2,7 +2,10 @@ import { defineConfig, coverageConfigDefaults } from 'vitest/config';
 
 export default defineConfig({
   test: {
-    fileParallelism: false, // Disable file parallelism to avoid issues with shared resources
+    fileParallelism: false,
+    snapshotFormat: {
+      maxOutputLength: 1e8,
+    },
     coverage: {
       exclude: [...coverageConfigDefaults.exclude, 'examples/**'],
     },

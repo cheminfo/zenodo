@@ -7,7 +7,7 @@ import { ZenodoFile } from '../ZenodoFile.ts';
 import { fetchZenodo } from '../fetchZenodo.ts';
 import { zipFiles } from '../utilities/zipFiles.ts';
 
-import type { ZenodoRecord, ZenodoMetadata } from './RecordType.ts';
+import type { ZenodoMetadata, ZenodoRecord } from './RecordType.ts';
 import type { ZenodoReview } from './RequestType.ts';
 
 const { ORCID } = pkg;
@@ -40,8 +40,7 @@ export class Record {
         if (
           identifiers &&
           identifiers.length > 0 &&
-          identifiers[0] &&
-          identifiers[0].scheme === 'ORCID' &&
+          identifiers[0]?.scheme === 'ORCID' &&
           typeof identifiers[0].identifier === 'string' &&
           ORCID.validate(identifiers[0].identifier)
         ) {

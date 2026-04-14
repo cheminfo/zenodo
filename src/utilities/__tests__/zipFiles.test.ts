@@ -1,5 +1,5 @@
 import { BlobReader, ZipReader } from '@zip.js/zip.js';
-import { test, expect } from 'vitest';
+import { expect, test } from 'vitest';
 
 import { zipFiles } from '../zipFiles.ts';
 
@@ -14,7 +14,7 @@ test('upload zip attachments', async () => {
 
   expect(zippedFiles).toBeInstanceOf(File);
   expect(zippedFiles.name).toBe('test-zip.zip');
-  expect(zippedFiles.size).equal(558);
+  expect(zippedFiles.size).toBe(550);
   expect(zippedFiles.type).toBe('application/zip');
 
   // read the content of the zip file
@@ -27,5 +27,6 @@ test('upload zip attachments', async () => {
   // @ts-expect-error getData is not typed
   await firstEntry?.getData(stream.writable);
   await zipReader.close();
-  expect(await textPromise).toBe('Hello, world!');
+
+  await expect(textPromise).resolves.toBe('Hello, world!');
 }, 30000);

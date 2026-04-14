@@ -1,7 +1,7 @@
 /* eslint-disable no-await-in-loop */
 import delay from 'delay';
 import { FifoLogger } from 'fifo-logger';
-import { test, expect, afterEach } from 'vitest';
+import { afterEach, expect, test } from 'vitest';
 
 import { Zenodo } from '../../Zenodo.ts';
 import { getConfig } from '../../__tests__/getConfig.ts';
@@ -68,6 +68,7 @@ test('createFiles with retry logic and failures', async () => {
   expect(results[0]?.value.key).toBe('test1.txt');
 
   const files = await record.listFiles();
+
   expect(files).toHaveLength(2);
 });
 
@@ -115,6 +116,7 @@ test('retrieveFile method', async () => {
 
   // @ts-expect-error createdFile may be undefined
   const retrievedFile = await record.retrieveFile(createdFile[0].value.key);
+
   expect(retrievedFile.value.key).toBe('example.txt');
 }, 10000);
 
@@ -160,7 +162,7 @@ test('update record metadata', async () => {
 
   expect(updatedRecord.value.metadata?.description).toBe('updated description');
   expect(updatedRecord.value.metadata?.title).toBe('updated title');
-  expect(Number(updatedRecord.value.id)).toEqual(Number(record.value.id));
+  expect(Number(updatedRecord.value.id)).toStrictEqual(Number(record.value.id));
 }, 10000);
 
 test.todo('newVersion method', async () => {
@@ -201,9 +203,11 @@ test.todo('newVersion method', async () => {
   await record.uploadFiles([fileData]);
 
   const publishedRecord = await record.publish();
+
   expect(publishedRecord.value.status).toBe('published');
 
   const newVersion = await publishedRecord.newVersion();
+
   expect(newVersion.value.id).not.toBe(record.value.id);
   expect(newVersion.value.status).toBe('unsubmitted');
 
@@ -251,6 +255,7 @@ test.todo('submitForReview without URL', async () => {
   await record.uploadFiles([fileData]);
 
   const review = await record.submitForReview();
+
   expect(review).toBeDefined();
   expect(review.topic?.record).toBe(String(record.value.id));
 });
@@ -295,9 +300,11 @@ test.todo('submitForReview with URL', async () => {
   const reviewWithoutUrl = await record.submitForReview();
 
   const submitUrl = reviewWithoutUrl.links?.actions?.submit;
+
   expect(submitUrl).toBeDefined();
 
   const reviewWithUrl = await record.submitForReview(submitUrl);
+
   expect(reviewWithUrl).toBeDefined();
 });
 
@@ -344,12 +351,14 @@ test('deleteFile method', async () => {
   expect(createdFile[0].value.key).toBe('example.txt');
 
   let files = await record.listFiles();
+
   expect(files).toHaveLength(1);
 
   // @ts-expect-error createdFile may be undefined
   await record.deleteFile(createdFile[0].value.key);
 
   files = await record.listFiles();
+
   expect(files).toHaveLength(0);
 
   const file1 = new File(['test content 1'], 'test1.txt', {
@@ -360,10 +369,12 @@ test('deleteFile method', async () => {
   });
   await record.uploadFiles([file1, file2]);
   files = await record.listFiles();
+
   expect(files).toHaveLength(2);
 
   await record.deleteFiles([file1.name, file2.name]);
   files = await record.listFiles();
+
   expect(files).toHaveLength(0);
 }, 10000);
 
@@ -411,6 +422,7 @@ test('createFilesAsZip method', async () => {
   expect(results[0]?.value.key).toBe('custom-archive.zip');
 
   const files = await record.listFiles();
+
   expect(files).toHaveLength(1);
   expect(files[0]?.value.key).toBe('custom-archive.zip');
 });
@@ -466,11 +478,15 @@ test('basic record manipulations', async () => {
   await record.uploadFilesAsZip([fourthFileData], 'example4');
 
   const files = await record.listFiles();
-  expect(files.length).toBe(4);
+
+  expect(files).toHaveLength(4);
+
   await record.deleteAllFiles();
   const emptyFiles = await record.listFiles();
-  expect(emptyFiles.length).toBe(0);
 
+  expect(emptyFiles).toHaveLength(0);
+
+  // eslint-disable-next-line vitest/no-conditional-in-test
   if (
     typeof record.value.id === 'string' ||
     typeof record.value.id === 'number'
@@ -481,6 +497,7 @@ test('basic record manipulations', async () => {
   }
 
   const logs = logger.getLogs();
+
   expect(logs.length).toBeGreaterThanOrEqual(10);
 }, 10000);
 
@@ -517,9 +534,12 @@ test('add to community', async () => {
     type: 'text/plain',
   });
   await record.uploadFiles([firstFileData]);
+
   expect(record.value.id).toBeDefined();
+
   const communityId = '24dd3aa0-38b4-415d-b038-cf71aa67e187';
   const request = await record.addToCommunity(communityId);
+
   expect(request).toBeDefined();
   expect(request).toHaveProperty('links.actions');
   // @ts-expect-error request is unknown type
@@ -527,7 +547,7 @@ test('add to community', async () => {
   // @ts-expect-error request is unknown type
   expect(request.topic.record).toBeDefined();
   // @ts-expect-error request is unknown type
-  expect(request.topic.record).toEqual(String(record.value.id));
+  expect(request.topic.record).toStrictEqual(String(record.value.id));
 });
 
 test.todo('publish record', async () => {
@@ -561,19 +581,24 @@ test.todo('publish record', async () => {
   };
 
   const record = await zenodo.createRecord(recordMetadata);
+
   expect(record.value.id).toBeDefined();
 
   const publishedRecord = await record.publish();
+
   expect(publishedRecord.value.id).toBe(record.value.id);
   expect(publishedRecord.value.status).toBe('published');
 
   const newVersion = await publishedRecord.newVersion();
+
   expect(newVersion.value.id).not.toBe(record.value.id);
   expect(newVersion.value.status).toBe('unsubmitted');
 
   // @ts-expect-error newVersion is unknown type
   const versions = await zenodo.retrieveVersions(newVersion.value.id);
+
   expect(versions.length).toBeGreaterThan(0);
+
   const latestVersion = versions.find(
     // @ts-expect-error version is unknown type
     (version) => version.metadata.relations.version[0].is_last === true,
@@ -613,6 +638,7 @@ test.todo('submit for review', async () => {
   };
 
   const record = await zenodo.createRecord(recordMetadata);
+
   expect(record.value.id).toBeDefined();
 
   await record.submitForReview();

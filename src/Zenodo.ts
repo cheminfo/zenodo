@@ -1,12 +1,12 @@
 import type { Logger } from 'cheminfo-types';
 import { recursiveRemoveEmptyAndNull } from 'ml-spectra-processing';
 
-import { ZenodoAuthenticationStates } from './ZenodoAuthenticationStates.ts';
 import type { ZenodoAuthenticationStatesType } from './ZenodoAuthenticationStates.ts';
+import { ZenodoAuthenticationStates } from './ZenodoAuthenticationStates.ts';
 import { fetchZenodo } from './fetchZenodo.ts';
 import type { ListDepositionsOptions } from './records/ListDepositionsOptions.ts';
 import { Record } from './records/Record.ts';
-import type { ZenodoMetadata, Identifier } from './records/RecordType.ts';
+import type { Identifier, ZenodoMetadata } from './records/RecordType.ts';
 import type { ZenodoReview } from './records/RequestType.ts';
 
 interface ZenodoOptions {

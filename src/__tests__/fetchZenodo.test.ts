@@ -1,8 +1,14 @@
-import { test, expect, vi, afterEach } from 'vitest';
+import { afterEach, expect, test, vi } from 'vitest';
 
-import { ZenodoAuthenticationStates } from '../ZenodoAuthenticationStates.ts';
+import type { Zenodo } from '../Zenodo.ts';
 import type { ZenodoAuthenticationStatesType } from '../ZenodoAuthenticationStates.ts';
-import { fetchZenodo } from '../fetchZenodo.ts';
+import { ZenodoAuthenticationStates } from '../ZenodoAuthenticationStates.ts';
+import { fetchZenodo as rawFetchZenodo } from '../fetchZenodo.ts';
+
+const fetchZenodo = (
+  zenodo: MockZenodo,
+  options: Parameters<typeof rawFetchZenodo>[1],
+) => rawFetchZenodo(zenodo as unknown as Zenodo, options);
 
 const mockFetch = vi.fn();
 global.fetch = mockFetch;
@@ -59,6 +65,7 @@ const mockZenodo: MockZenodo = {
       return false;
     }),
 };
+
 afterEach(() => {
   vi.clearAllMocks();
   mockZenodo.authenticationState = ZenodoAuthenticationStates.NOT_TRIED;
@@ -110,8 +117,8 @@ test('non-retryable errors', async () => {
   const errorResponse = new Response('Unauthorized', { status: 401 });
   mockFetch.mockResolvedValueOnce(errorResponse);
 
-  await expect(fetchZenodo(mockZenodo, {})).rejects.toThrow();
-  expect(mockFetch).toHaveBeenCalledTimes(1);
+  await expect(fetchZenodo(mockZenodo, {})).rejects.toThrow(/Request failed/);
+  expect(mockFetch).toHaveBeenCalledOnce();
 }, 15000);
 
 test('retryable errors 408', async () => {
@@ -123,6 +130,7 @@ test('retryable errors 408', async () => {
     .mockResolvedValueOnce(successResponse);
 
   await fetchZenodo(mockZenodo, {});
+
   expect(mockFetch).toHaveBeenCalledTimes(2);
 });
 
@@ -130,8 +138,8 @@ test('non-retryable errors 409', async () => {
   const errorResponse = new Response('Conflict', { status: 409 });
   mockFetch.mockResolvedValueOnce(errorResponse);
 
-  await expect(fetchZenodo(mockZenodo, {})).rejects.toThrow();
-  expect(mockFetch).toHaveBeenCalledTimes(1);
+  await expect(fetchZenodo(mockZenodo, {})).rejects.toThrow(/Request failed/);
+  expect(mockFetch).toHaveBeenCalledOnce();
 });
 
 test('exponential backoff', async () => {
@@ -185,7 +193,9 @@ test('max retries exceeded', async () => {
   const errorResponse = new Response('Server error', { status: 500 });
   mockFetch.mockResolvedValue(errorResponse);
 
-  await expect(fetchZenodo(mockZenodo, { maxRetries: 1 })).rejects.toThrow();
+  await expect(fetchZenodo(mockZenodo, { maxRetries: 1 })).rejects.toThrow(
+    /Request failed/,
+  );
 
   expect(mockFetch).toHaveBeenCalledTimes(2);
 });
@@ -278,6 +288,7 @@ test('no logger', async () => {
   mockFetch.mockResolvedValueOnce(mockResponse);
 
   const result = await fetchZenodo(mockZenodo, {});
+
   expect(result).toStrictEqual(mockResponse);
 });
 
@@ -294,6 +305,7 @@ test('file body', async () => {
   });
 
   const callArgs = mockFetch.mock.calls[0];
+
   expect(callArgs).toBeDefined();
   // @ts-expect-error callArgs is unknown type
   expect(callArgs[1].body).toBe(file);
@@ -303,6 +315,7 @@ test('authentication error triggers verification', async () => {
   mockZenodo.authenticationState = ZenodoAuthenticationStates.NOT_TRIED;
   mockZenodo.verifyAuthentication.mockResolvedValueOnce(true);
   mockZenodo.verifyAuthentication.mockImplementation(
+    // eslint-disable-next-line @typescript-eslint/no-misused-promises
     async function verifyAuthentication(this: MockZenodo) {
       this.authenticationState = ZenodoAuthenticationStates.SUCCEEDED;
       return true;
@@ -318,7 +331,7 @@ test('authentication error triggers verification', async () => {
 
   await fetchZenodo(mockZenodo, {});
 
-  expect(mockZenodo.verifyAuthentication).toHaveBeenCalledTimes(1);
+  expect(mockZenodo.verifyAuthentication).toHaveBeenCalledOnce();
   expect(mockFetch).toHaveBeenCalledTimes(2);
 });
 
@@ -333,6 +346,7 @@ test('rate limit info missing reset header', async () => {
   mockFetch.mockResolvedValueOnce(resp);
 
   await fetchZenodo(mockZenodo, {});
+
   expect(mockZenodo.logger.debug).not.toHaveBeenCalledWith(
     expect.stringContaining('Rate limit status'),
   );
@@ -356,6 +370,7 @@ test('calculateRateLimitDelay branch with remaining > 0', async () => {
     .mockResolvedValueOnce(finalResp);
 
   await fetchZenodo(mockZenodo, { baseDelay: 10, useExponentialBackoff: true });
+
   expect(mockFetch).toHaveBeenCalledTimes(2);
 });
 
