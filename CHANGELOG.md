@@ -6,6 +6,13 @@
 * update axios ([2c121db](https://github.com/cheminfo/zenodo/commit/2c121db6e24bccd94468dad9ed2698463a19b5a4))
 
 <a name="1.0.1"></a>
+## [4.1.0](https://github.com/cheminfo/zenodo/compare/v4.0.0...v4.1.0) (2026-04-15)
+
+
+### Features
+
+* support access option in createRecord and Record.update ([24b0d1d](https://github.com/cheminfo/zenodo/commit/24b0d1d215ececb6441742c5d8fe054b853ffee0))
+
 ## [4.0.0](https://github.com/cheminfo/zenodo/compare/v3.0.0...v4.0.0) (2025-08-15)
 
 
