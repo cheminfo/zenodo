@@ -6,7 +6,11 @@ import { ZenodoAuthenticationStates } from './ZenodoAuthenticationStates.ts';
 import { fetchZenodo } from './fetchZenodo.ts';
 import type { ListDepositionsOptions } from './records/ListDepositionsOptions.ts';
 import { Record } from './records/Record.ts';
-import type { Identifier, ZenodoMetadata } from './records/RecordType.ts';
+import type {
+  Identifier,
+  ZenodoMetadata,
+  ZenodoRecordAccess,
+} from './records/RecordType.ts';
 import type { ZenodoReview } from './records/RequestType.ts';
 
 interface ZenodoOptions {
@@ -125,16 +129,28 @@ export class Zenodo {
   /**
    * Creates a new record in the Zenodo instance.
    * @param metadata - the metadata for the new record
+   * @param options - additional options for the record
+   * @param options.access - access control settings for the new record (files visibility and optional embargo)
    * @throws {Error} If the metadata is invalid or the request fails
    * @returns The created record object
    */
-  async createRecord(metadata: ZenodoMetadata): Promise<Record> {
+  async createRecord(
+    metadata: ZenodoMetadata,
+    options: { access?: ZenodoRecordAccess } = {},
+  ): Promise<Record> {
+    const { access } = options;
     recursiveRemoveEmptyAndNull(metadata);
+    const body: { metadata: ZenodoMetadata; access?: ZenodoRecordAccess } = {
+      metadata,
+    };
+    if (access) {
+      body.access = access;
+    }
     const response = await fetchZenodo(this, {
       route: 'records',
       expectedStatus: 201,
       method: 'POST',
-      body: JSON.stringify({ metadata }),
+      body: JSON.stringify(body),
     });
     const record = new Record(this, await response.json());
     this.logger?.info(`Created record ${record.value.id}`);

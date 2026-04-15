@@ -7,7 +7,11 @@ import { ZenodoFile } from '../ZenodoFile.ts';
 import { fetchZenodo } from '../fetchZenodo.ts';
 import { zipFiles } from '../utilities/zipFiles.ts';
 
-import type { ZenodoMetadata, ZenodoRecord } from './RecordType.ts';
+import type {
+  ZenodoMetadata,
+  ZenodoRecord,
+  ZenodoRecordAccess,
+} from './RecordType.ts';
 import type { ZenodoReview } from './RequestType.ts';
 
 const { ORCID } = pkg;
@@ -171,13 +175,23 @@ export class Record {
     return file;
   }
 
-  async update(metadata: ZenodoMetadata): Promise<Record> {
+  async update(
+    metadata: ZenodoMetadata,
+    options: { access?: ZenodoRecordAccess } = {},
+  ): Promise<Record> {
+    const { access } = options;
     recursiveRemoveEmptyAndNull(metadata);
+    const body: { metadata: ZenodoMetadata; access?: ZenodoRecordAccess } = {
+      metadata,
+    };
+    if (access) {
+      body.access = access;
+    }
     const route = `records/${this.value.id}/draft`;
     const response = await fetchZenodo(this.zenodo, {
       route,
       method: 'PUT',
-      body: JSON.stringify({ metadata }),
+      body: JSON.stringify(body),
       contentType: 'application/json',
       expectedStatus: 200,
     });

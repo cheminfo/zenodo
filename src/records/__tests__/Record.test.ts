@@ -550,6 +550,82 @@ test('add to community', async () => {
   expect(request.topic.record).toStrictEqual(String(record.value.id));
 });
 
+test('create record with files:restricted (metadata public)', async () => {
+  const logger = new FifoLogger();
+  const zenodo = new Zenodo({
+    host: 'sandbox.zenodo.org',
+    accessToken: config.accessToken || '',
+    logger,
+  });
+
+  const recordMetadata: ZenodoMetadata = {
+    resource_type: { id: 'dataset' },
+    description: 'files-only restricted test',
+    title: 'files-only restricted test',
+    rights: [{ id: 'cc-by-4.0' }],
+    creators: [
+      {
+        person_or_org: {
+          family_name: 'test',
+          given_name: 'filesonly',
+          type: 'personal',
+        },
+      },
+    ],
+  };
+
+  const record = await zenodo.createRecord(recordMetadata, {
+    access: { record: 'public', files: 'restricted' },
+  });
+
+  expect(record.value.id).toBeDefined();
+  expect(record.value.access?.files).toBe('restricted');
+}, 15000);
+
+test('create embargoed record via POST', async () => {
+  const logger = new FifoLogger();
+  const zenodo = new Zenodo({
+    host: 'sandbox.zenodo.org',
+    accessToken: config.accessToken || '',
+    logger,
+  });
+
+  const recordMetadata: ZenodoMetadata = {
+    resource_type: { id: 'dataset' },
+    description: 'embargo test',
+    title: 'embargo test',
+    rights: [{ id: 'cc-by-4.0' }],
+    creators: [
+      {
+        person_or_org: {
+          family_name: 'test',
+          given_name: 'embargo',
+          type: 'personal',
+        },
+      },
+    ],
+  };
+
+  const embargoDate = new Date();
+  embargoDate.setFullYear(embargoDate.getFullYear() + 1);
+
+  const record = await zenodo.createRecord(recordMetadata, {
+    access: {
+      record: 'public',
+      files: 'restricted',
+      embargo: {
+        active: true,
+        until: embargoDate.toISOString().slice(0, 10),
+        reason: 'testing embargo',
+      },
+    },
+  });
+
+  expect(record.value.id).toBeDefined();
+  expect(record.value.access?.files).toBe('restricted');
+  expect(record.value.access?.embargo?.active).toBe(true);
+}, 15000);
+
 test.todo('publish record', async () => {
   const logger = new FifoLogger();
   const zenodo = new Zenodo({

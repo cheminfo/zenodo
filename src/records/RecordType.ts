@@ -114,33 +114,7 @@ export interface ZenodoRecord {
   /**
    * Record access control and ownership.
    */
-  access?: {
-    /**
-     * Record visibility (public or restricted)
-     */
-    record?: 'public' | 'restricted';
-    /**
-     * Files visibility (public or restricted)
-     */
-    files?: 'public' | 'restricted';
-    /**
-     * Description of the embargo on the record.
-     */
-    embargo?: {
-      /**
-       * Whether or not the embargo is (still) active.
-       */
-      active?: boolean | null;
-      /**
-       * Embargo date of record (ISO8601 formatted date time in UTC). At this time both metadata and files will be made public.
-       */
-      until?: string | null;
-      /**
-       * The reason why the record is under embargo.
-       */
-      reason?: string | null;
-    };
-  };
+  access?: ZenodoRecordAccess;
   files?: FilesSimple;
   media_files?: FilesSimple;
   notes?: string[];
@@ -181,6 +155,38 @@ export interface ExternalPid {
    */
   client?: string;
 }
+/**
+ * Record access control and ownership.
+ */
+export interface ZenodoRecordAccess {
+  /**
+   * Record metadata visibility. Zenodo only exposes the public value —
+   * fully private records are not an option the platform supports.
+   */
+  record?: 'public';
+  /**
+   * Files visibility (public or restricted).
+   */
+  files?: 'public' | 'restricted';
+  /**
+   * Description of the embargo on the record.
+   */
+  embargo?: {
+    /**
+     * Whether or not the embargo is (still) active.
+     */
+    active?: boolean | null;
+    /**
+     * Embargo date of record (ISO8601 formatted date time in UTC). At this time both metadata and files will be made public.
+     */
+    until?: string | null;
+    /**
+     * The reason why the record is under embargo.
+     */
+    reason?: string | null;
+  };
+}
+
 /**
  * Resource metadata.
  */
