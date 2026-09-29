@@ -6,6 +6,13 @@
 * update axios ([2c121db](https://github.com/cheminfo/zenodo/commit/2c121db6e24bccd94468dad9ed2698463a19b5a4))
 
 <a name="1.0.1"></a>
+## [4.1.1](https://github.com/cheminfo/zenodo/compare/v4.1.0...v4.1.1) (2026-09-29)
+
+
+### Bug Fixes
+
+* send a User-Agent header, required by zenodo.org ([#23](https://github.com/cheminfo/zenodo/issues/23)) ([12c8181](https://github.com/cheminfo/zenodo/commit/12c8181cddd8e6e8ee1dfa094e5912b9028e4251))
+
 ## [4.1.0](https://github.com/cheminfo/zenodo/compare/v4.0.0...v4.1.0) (2026-04-15)
 
 
