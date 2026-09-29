@@ -13,9 +13,20 @@ import type {
 } from './records/RecordType.ts';
 import type { ZenodoReview } from './records/RequestType.ts';
 
+export const DEFAULT_USER_AGENT =
+  'cheminfo-zenodo (+https://github.com/cheminfo/zenodo)';
+
 interface ZenodoOptions {
   accessToken: string;
+  /**
+   * @default 'sandbox.zenodo.org'
+   */
   host?: string;
+  /**
+   * Sent as the `User-Agent` header. zenodo.org rejects requests without a
+   * descriptive one; an empty string omits the header.
+   * @default DEFAULT_USER_AGENT
+   */
   userAgent?: string;
   logger?: Logger;
 }
@@ -28,7 +39,7 @@ export class Zenodo {
   host: string;
   accessToken: string;
   baseURL: string;
-  userAgent?: string;
+  userAgent: string;
   logger?: Logger;
   authenticationState: ZenodoAuthenticationStatesType;
 
@@ -36,7 +47,7 @@ export class Zenodo {
     const {
       accessToken,
       host = 'sandbox.zenodo.org',
-      userAgent,
+      userAgent = DEFAULT_USER_AGENT,
       logger,
     } = options;
     this.host = host;

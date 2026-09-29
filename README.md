@@ -18,6 +18,14 @@ https://developers.zenodo.org/#authentication
 // by default we set the host to 'sandbox.zenodo.org' so that you can easily play around with this library without damage
 const zenodo = new Zenodo({ accessToken, host: 'zenodo.org' });
 
+// zenodo.org rejects requests without a descriptive User-Agent. A default one is
+// sent, but identifying your application is recommended.
+const myZenodo = new Zenodo({
+  accessToken,
+  host: 'zenodo.org',
+  userAgent: 'my-app/1.0 (+https://example.org)',
+});
+
 // retrieve the list of all the depositions
 const depositions = await zenodo.listDepositions();
 for (const deposition of depoositions) {

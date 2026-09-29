@@ -2,7 +2,7 @@
 import { FifoLogger } from 'fifo-logger';
 import { afterEach, expect, test } from 'vitest';
 
-import { Zenodo } from '../Zenodo.ts';
+import { DEFAULT_USER_AGENT, Zenodo } from '../Zenodo.ts';
 import type { ZenodoMetadata } from '../records/RecordType.ts';
 
 import { getConfig } from './getConfig.ts';
@@ -29,13 +29,19 @@ test('no token', async ({ expect }) => {
   // @ts-expect-error we are testing the error
   const zenodo = new Zenodo({
     host: 'zenodo.org',
-    userAgent: 'test-user-agent',
   });
   const publicRecord = await zenodo.retrieveRecord(publicRecordId, {
     isPublished: true,
   });
 
   expect(publicRecord.value.id).toBe(publicRecordId);
+});
+
+test('user agent', () => {
+  expect(new Zenodo({ accessToken: '' }).userAgent).toBe(DEFAULT_USER_AGENT);
+  expect(
+    new Zenodo({ accessToken: '', userAgent: 'my-app/1.0' }).userAgent,
+  ).toBe('my-app/1.0');
 });
 
 test('create zenodo', async () => {
