@@ -13,9 +13,21 @@ import type {
 } from './records/RecordType.ts';
 import type { ZenodoReview } from './records/RequestType.ts';
 
+export const DEFAULT_USER_AGENT =
+  'cheminfo-zenodo (+https://github.com/cheminfo/zenodo)';
+
 interface ZenodoOptions {
   accessToken: string;
+  /**
+   * @default 'sandbox.zenodo.org'
+   */
   host?: string;
+  /**
+   * Sent as the `User-Agent` header. zenodo.org rejects requests without a
+   * descriptive one; an empty string omits the header.
+   * @default DEFAULT_USER_AGENT
+   */
+  userAgent?: string;
   logger?: Logger;
 }
 
@@ -27,16 +39,23 @@ export class Zenodo {
   host: string;
   accessToken: string;
   baseURL: string;
+  userAgent: string;
   logger?: Logger;
   authenticationState: ZenodoAuthenticationStatesType;
 
   constructor(options: ZenodoOptions) {
-    const { accessToken, host = 'sandbox.zenodo.org', logger } = options;
+    const {
+      accessToken,
+      host = 'sandbox.zenodo.org',
+      userAgent = DEFAULT_USER_AGENT,
+      logger,
+    } = options;
     this.host = host;
     this.baseURL = `https://${host}/api/`;
     this.logger = logger;
     this.accessToken = accessToken;
     this.authenticationState = ZenodoAuthenticationStates.NOT_TRIED;
+    this.userAgent = userAgent;
   }
 
   /**
@@ -71,6 +90,10 @@ export class Zenodo {
 
     if (this.accessToken) {
       headers.set('Authorization', `Bearer ${this.accessToken}`);
+    }
+
+    if (this.userAgent) {
+      headers.set('User-Agent', this.userAgent);
     }
 
     // can't use fetchZenodo to avoid circular dependency

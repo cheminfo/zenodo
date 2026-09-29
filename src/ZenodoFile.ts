@@ -33,11 +33,13 @@ export class ZenodoFile {
 
   async getContentResponse() {
     const link = this.value.links.content;
-    const response = await fetch(link, {
-      headers: {
-        Authorization: `Bearer ${this.zenodo.accessToken}`,
-      },
+    const headers = new Headers({
+      Authorization: `Bearer ${this.zenodo.accessToken}`,
     });
+    if (this.zenodo.userAgent) {
+      headers.set('User-Agent', this.zenodo.userAgent);
+    }
+    const response = await fetch(link, { headers });
     if (!response.ok) {
       throw new Error(`Failed to fetch ${link}`);
     }

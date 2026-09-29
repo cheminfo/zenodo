@@ -496,6 +496,9 @@ export async function fetchZenodo(
   if (zenodo.accessToken) {
     headers.set('Authorization', `Bearer ${zenodo.accessToken}`);
   }
+  if (zenodo.userAgent) {
+    headers.set('User-Agent', zenodo.userAgent);
+  }
   if (contentType) {
     headers.set('Content-Type', contentType);
   }

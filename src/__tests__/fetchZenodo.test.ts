@@ -1,4 +1,4 @@
-import { afterEach, expect, test, vi } from 'vitest';
+import { afterEach, beforeEach, expect, test, vi } from 'vitest';
 
 import type { Zenodo } from '../Zenodo.ts';
 import type { ZenodoAuthenticationStatesType } from '../ZenodoAuthenticationStates.ts';
@@ -27,6 +27,7 @@ interface MockZenodo {
   accessToken: string;
   logger: MockLogger;
   host: string;
+  userAgent: string;
   authenticationState: ZenodoAuthenticationStatesType;
   listRecords: ReturnType<typeof vi.fn>;
   createRecord: ReturnType<typeof vi.fn>;
@@ -37,38 +38,77 @@ interface MockZenodo {
   verifyAuthentication: ReturnType<typeof vi.fn>;
 }
 
-const mockZenodo: MockZenodo = {
-  baseURL: 'https://sandbox.zenodo.org/api/',
-  accessToken: 'test-token',
-  logger: {
-    debug: vi.fn(),
-    child: vi.fn(),
-    info: vi.fn(),
-    warn: vi.fn(),
-    error: vi.fn(),
-    trace: vi.fn(),
-    fatal: vi.fn(),
-  },
-  host: 'sandbox.zenodo.org',
-  authenticationState: ZenodoAuthenticationStates.NOT_TRIED,
-  listRecords: vi.fn(),
-  createRecord: vi.fn(),
-  retrieveRecord: vi.fn(),
-  retrieveRequests: vi.fn(),
-  retrieveVersions: vi.fn(),
-  deleteRecord: vi.fn(),
-  verifyAuthentication: vi
-    .fn()
-    .mockImplementation(async function verifyAuthentication(this: MockZenodo) {
-      // Simulate the actual behavior
-      this.authenticationState = ZenodoAuthenticationStates.FAILED;
-      return false;
-    }),
-};
+function createMockZenodo(): MockZenodo {
+  return {
+    baseURL: 'https://sandbox.zenodo.org/api/',
+    accessToken: 'test-token',
+    logger: {
+      debug: vi.fn(),
+      child: vi.fn(),
+      info: vi.fn(),
+      warn: vi.fn(),
+      error: vi.fn(),
+      trace: vi.fn(),
+      fatal: vi.fn(),
+    },
+    host: 'sandbox.zenodo.org',
+    userAgent: 'test-user-agent',
+    authenticationState: ZenodoAuthenticationStates.NOT_TRIED,
+    listRecords: vi.fn(),
+    createRecord: vi.fn(),
+    retrieveRecord: vi.fn(),
+    retrieveRequests: vi.fn(),
+    retrieveVersions: vi.fn(),
+    deleteRecord: vi.fn(),
+    verifyAuthentication: vi
+      .fn()
+      .mockImplementation(async function verifyAuthentication(
+        this: MockZenodo,
+      ) {
+        // Simulate the actual behavior
+        this.authenticationState = ZenodoAuthenticationStates.FAILED;
+        return false;
+      }),
+  };
+}
+
+let mockZenodo: MockZenodo;
+
+beforeEach(() => {
+  mockZenodo = createMockZenodo();
+});
 
 afterEach(() => {
   vi.clearAllMocks();
-  mockZenodo.authenticationState = ZenodoAuthenticationStates.NOT_TRIED;
+});
+
+test('omitting user-agent header', async () => {
+  mockZenodo.userAgent = '';
+  const mockResponse = new Response('{"success": true}', {
+    status: 200,
+  });
+  mockFetch.mockResolvedValueOnce(mockResponse);
+
+  await fetchZenodo(mockZenodo, {});
+
+  // @ts-expect-error mockFetch can be undefined
+  const callHeaders = mockFetch.mock.calls[0][1]?.headers;
+
+  expect(callHeaders.has('User-Agent')).toBe(false);
+});
+
+test('calling with custom user-agent header', async () => {
+  const mockResponse = new Response('{"success": true}', {
+    status: 200,
+  });
+  mockFetch.mockResolvedValueOnce(mockResponse);
+
+  await fetchZenodo(mockZenodo, {});
+
+  // @ts-expect-error mockFetch can be undefined
+  const callHeaders = mockFetch.mock.calls[0][1]?.headers;
+
+  expect(callHeaders.get('User-Agent')).toBe('test-user-agent');
 });
 
 test('missing rate limit headers', async () => {

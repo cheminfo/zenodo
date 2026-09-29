@@ -14,7 +14,6 @@ test('upload zip attachments', async () => {
 
   expect(zippedFiles).toBeInstanceOf(File);
   expect(zippedFiles.name).toBe('test-zip.zip');
-  expect(zippedFiles.size).toBe(550);
   expect(zippedFiles.type).toBe('application/zip');
 
   // read the content of the zip file
@@ -23,6 +22,12 @@ test('upload zip attachments', async () => {
   const stream = new TransformStream();
   const textPromise = new Response(stream.readable).text();
   const entries = await zipReader.getEntries();
+
+  expect(entries.map((entry) => entry.filename)).toStrictEqual([
+    'test-zip/example1.txt',
+    'test-zip/example2.txt',
+  ]);
+
   const firstEntry = entries.shift();
   // @ts-expect-error getData is not typed
   await firstEntry?.getData(stream.writable);
